@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"D:\\\\Flight Project Tool\\\\flight-explorer\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "PowerShell(head *)",
+      "Bash(New-Item *)",
+      "Bash(ngrok config *)"
+    ]
+  }
+}

@@ -1,0 +1,2183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>FlightDesk — Flight Search</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0F1E;
+    --surface: #111827;
+    --surface-2: #0E1525;
+    --accent: #2563EB;
+    --accent-2: #6366F1;
+    --success: #10B981;
+    --warn: #F59E0B;
+    --text: #F9FAFB;
+    --text-dim: #9CA3AF;
+    --text-dim-2: #6B7280;
+    --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.12);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background:
+      radial-gradient(900px 600px at 85% -10%, rgba(99,102,241,0.12), transparent 60%),
+      radial-gradient(700px 500px at -5% 10%, rgba(37,99,235,0.10), transparent 60%),
+      var(--bg);
+    min-height: 100vh;
+  }
+  ::selection { background: rgba(37,99,235,0.4); }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .tabnum { font-variant-numeric: tabular-nums; }
+  .noscroll::-webkit-scrollbar { display:none; }
+  .noscroll { scrollbar-width: none; }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes loaderPulse {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(400%); }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+  @keyframes dashmove {
+    to { stroke-dashoffset: -40; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" data-presets="react">
+
+// tweaks-panel.jsx
+// Reusable Tweaks shell + form-control helpers.
+//
+// Owns the host protocol (listens for __activate_edit_mode / __deactivate_edit_mode,
+// posts __edit_mode_available / __edit_mode_set_keys / __edit_mode_dismissed) so
+// individual prototypes don't re-roll it. Ships a consistent set of controls so you
+// don't hand-draw <input type="range">, segmented radios, steppers, etc.
+//
+// Usage (in an HTML file that loads React + Babel):
+//
+//   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+//     "primaryColor": "#D97757",
+//     "palette": ["#D97757", "#29261b", "#f6f4ef"],
+//     "fontSize": 16,
+//     "density": "regular",
+//     "dark": false
+//   }/*EDITMODE-END*/;
+//
+//   function App() {
+//     const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+//     return (
+//       <div style={{ fontSize: t.fontSize, color: t.primaryColor }}>
+//         Hello
+//         <TweaksPanel>
+//           <TweakSection label="Typography" />
+//           <TweakSlider label="Font size" value={t.fontSize} min={10} max={32} unit="px"
+//                        onChange={(v) => setTweak('fontSize', v)} />
+//           <TweakRadio  label="Density" value={t.density}
+//                        options={['compact', 'regular', 'comfy']}
+//                        onChange={(v) => setTweak('density', v)} />
+//           <TweakSection label="Theme" />
+//           <TweakColor  label="Primary" value={t.primaryColor}
+//                        options={['#D97757', '#2A6FDB', '#1F8A5B', '#7A5AE0']}
+//                        onChange={(v) => setTweak('primaryColor', v)} />
+//           <TweakColor  label="Palette" value={t.palette}
+//                        options={[['#D97757', '#29261b', '#f6f4ef'],
+//                                  ['#475569', '#0f172a', '#f1f5f9']]}
+//                        onChange={(v) => setTweak('palette', v)} />
+//           <TweakToggle label="Dark mode" value={t.dark}
+//                        onChange={(v) => setTweak('dark', v)} />
+//         </TweaksPanel>
+//       </div>
+//     );
+//   }
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    transform:scale(var(--dc-inv-zoom,1));transform-origin:bottom right;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-body::-webkit-scrollbar{width:8px}
+  .twk-body::-webkit-scrollbar-track{background:transparent;margin:2px}
+  .twk-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px;
+    border:2px solid transparent;background-clip:content-box}
+  .twk-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25);
+    border:2px solid transparent;background-clip:content-box}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
+
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+
+  .twk-field{appearance:none;box-sizing:border-box;width:100%;min-width:0;height:26px;padding:0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
+    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
+  select.twk-field{padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(0,0,0,.5)' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center}
+
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
+    border-radius:999px;background:rgba(0,0,0,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#fff;
+    border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+    background:#fff;border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+
+  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;
+    background:rgba(0,0,0,.06);user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;
+    background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);
+    transition:left .15s cubic-bezier(.3,.7,.4,1),width .15s}
+  .twk-seg.dragging .twk-seg-thumb{transition:none}
+  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;
+    background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;
+    border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2;
+    overflow-wrap:anywhere}
+
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+
+  .twk-num{display:flex;align-items:center;box-sizing:border-box;min-width:0;height:26px;padding:0 0 0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;background:rgba(255,255,255,.6)}
+  .twk-num-lbl{font-weight:500;color:rgba(41,38,27,.6);cursor:ew-resize;
+    user-select:none;padding-right:8px}
+  .twk-num input{flex:1;min-width:0;height:100%;border:0;background:transparent;
+    font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:0 8px 0 0;
+    outline:none;color:inherit;-moz-appearance:textfield}
+  .twk-num input::-webkit-inner-spin-button,.twk-num input::-webkit-outer-spin-button{
+    -webkit-appearance:none;margin:0}
+  .twk-num-unit{padding-right:8px;color:rgba(41,38,27,.45)}
+
+  .twk-btn{appearance:none;height:26px;padding:0 12px;border:0;border-radius:7px;
+    background:rgba(0,0,0,.78);color:#fff;font:inherit;font-weight:500;cursor:default}
+  .twk-btn:hover{background:rgba(0,0,0,.88)}
+  .twk-btn.secondary{background:rgba(0,0,0,.06);color:inherit}
+  .twk-btn.secondary:hover{background:rgba(0,0,0,.1)}
+
+  .twk-swatch{appearance:none;-webkit-appearance:none;width:56px;height:22px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:6px;padding:0;cursor:default;
+    background:transparent;flex-shrink:0}
+  .twk-swatch::-webkit-color-swatch-wrapper{padding:0}
+  .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
+  .twk-swatch::-moz-color-swatch{border:0;border-radius:5.5px}
+
+  .twk-chips{display:flex;gap:6px}
+  .twk-chip{position:relative;appearance:none;flex:1;min-width:0;height:46px;
+    padding:0;border:0;border-radius:6px;overflow:hidden;cursor:default;
+    box-shadow:0 0 0 .5px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.06);
+    transition:transform .12s cubic-bezier(.3,.7,.4,1),box-shadow .12s}
+  .twk-chip:hover{transform:translateY(-1px);
+    box-shadow:0 0 0 .5px rgba(0,0,0,.18),0 4px 10px rgba(0,0,0,.12)}
+  .twk-chip[data-on="1"]{box-shadow:0 0 0 1.5px rgba(0,0,0,.85),
+    0 2px 6px rgba(0,0,0,.15)}
+  .twk-chip>span{position:absolute;top:0;bottom:0;right:0;width:34%;
+    display:flex;flex-direction:column;box-shadow:-1px 0 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i{flex:1;box-shadow:0 -1px 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i:first-child{box-shadow:none}
+  .twk-chip svg{position:absolute;top:6px;left:6px;width:13px;height:13px;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+`;
+
+// ── useTweaks ───────────────────────────────────────────────────────────────
+// Single source of truth for tweak values. setTweak persists via the host
+// (__edit_mode_set_keys → host rewrites the EDITMODE block on disk).
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  // Accepts either setTweak('key', value) or setTweak({ key: value, ... }) so a
+  // useState-style call doesn't write a "[object Object]" key into the persisted
+  // JSON block.
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+    // Same-window signal so in-page listeners (deck-stage rail thumbnails)
+    // can react — the parent message only reaches the host, not peers.
+    window.dispatchEvent(new CustomEvent('tweakchange', { detail: edits }));
+  }, []);
+  return [values, setTweak];
+}
+
+// ── TweaksPanel ─────────────────────────────────────────────────────────────
+// Floating shell. Registers the protocol listener BEFORE announcing
+// availability — if the announce ran first, the host's activate could land
+// before our handler exists and the toolbar toggle would silently no-op.
+// The close button posts __edit_mode_dismissed so the host's toolbar toggle
+// flips off in lockstep; the host echoes __deactivate_edit_mode back which
+// is what actually hides the panel.
+function TweaksPanel({ title = 'Tweaks', children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  const PAD = 16;
+
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
+    offsetRef.current = {
+      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    clampToViewport();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', clampToViewport);
+      return () => window.removeEventListener('resize', clampToViewport);
+    }
+    const ro = new ResizeObserver(clampToViewport);
+    ro.observe(document.documentElement);
+    return () => ro.disconnect();
+  }, [open, clampToViewport]);
+
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const dismiss = () => {
+    setOpen(false);
+    window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+  };
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = {
+        x: startRight - (ev.clientX - sx),
+        y: startBottom - (ev.clientY - sy),
+      };
+      clampToViewport();
+    };
+    const up = () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" data-omelette-chrome=""
+           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" aria-label="Close tweaks"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={dismiss}>✕</button>
+        </div>
+        <div className="twk-body">
+          {children}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Layout helpers ──────────────────────────────────────────────────────────
+
+function TweakSection({ label, children }) {
+  return (
+    <>
+      <div className="twk-sect">{label}</div>
+      {children}
+    </>
+  );
+}
+
+function TweakRow({ label, value, children, inline = false }) {
+  return (
+    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
+      <div className="twk-lbl">
+        <span>{label}</span>
+        {value != null && <span className="twk-val">{value}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ── Controls ────────────────────────────────────────────────────────────────
+
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
+  return (
+    <TweakRow label={label} value={`${value}${unit}`}>
+      <input type="range" className="twk-slider" min={min} max={max} step={step}
+             value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </TweakRow>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
+              role="switch" aria-checked={!!value}
+              onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakRadio({ label, value, options, onChange }) {
+  const trackRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  // The active value is read by pointer-move handlers attached for the lifetime
+  // of a drag — ref it so a stale closure doesn't fire onChange for every move.
+  const valueRef = React.useRef(value);
+  valueRef.current = value;
+
+  // Segments wrap mid-word once per-segment width runs out. The track is
+  // ~248px (280 panel − 28 body pad − 4 seg pad), each button loses 12px
+  // to its own padding, and 11.5px system-ui averages ~6.3px/char — so 2
+  // options fit ~16 chars each, 3 fit ~10. Past that (or >3 options), fall
+  // back to a dropdown rather than wrap.
+  const labelLen = (o) => String(typeof o === 'object' ? o.label : o).length;
+  const maxLen = options.reduce((m, o) => Math.max(m, labelLen(o)), 0);
+  const fitsAsSegments = maxLen <= ({ 2: 16, 3: 10 }[options.length] ?? 0);
+  if (!fitsAsSegments) {
+    // <select> emits strings — map back to the original option value so the
+    // fallback stays type-preserving (numbers, booleans) like the segment path.
+    const resolve = (s) => {
+      const m = options.find((o) => String(typeof o === 'object' ? o.value : o) === s);
+      return m === undefined ? s : typeof m === 'object' ? m.value : m;
+    };
+    return <TweakSelect label={label} value={value} options={options}
+                        onChange={(s) => onChange(resolve(s))} />;
+  }
+  const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
+  const idx = Math.max(0, opts.findIndex((o) => o.value === value));
+  const n = opts.length;
+
+  const segAt = (clientX) => {
+    const r = trackRef.current.getBoundingClientRect();
+    const inner = r.width - 4;
+    const i = Math.floor(((clientX - r.left - 2) / inner) * n);
+    return opts[Math.max(0, Math.min(n - 1, i))].value;
+  };
+
+  const onPointerDown = (e) => {
+    setDragging(true);
+    const v0 = segAt(e.clientX);
+    if (v0 !== valueRef.current) onChange(v0);
+    const move = (ev) => {
+      if (!trackRef.current) return;
+      const v = segAt(ev.clientX);
+      if (v !== valueRef.current) onChange(v);
+    };
+    const up = () => {
+      setDragging(false);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  return (
+    <TweakRow label={label}>
+      <div ref={trackRef} role="radiogroup" onPointerDown={onPointerDown}
+           className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
+        <div className="twk-seg-thumb"
+             style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
+                      width: `calc((100% - 4px) / ${n})` }} />
+        {opts.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={o.value === value}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakSelect({ label, value, options, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <select className="twk-field" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => {
+          const v = typeof o === 'object' ? o.value : o;
+          const l = typeof o === 'object' ? o.label : o;
+          return <option key={v} value={v}>{l}</option>;
+        })}
+      </select>
+    </TweakRow>
+  );
+}
+
+function TweakText({ label, value, placeholder, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <input className="twk-field" type="text" value={value} placeholder={placeholder}
+             onChange={(e) => onChange(e.target.value)} />
+    </TweakRow>
+  );
+}
+
+function TweakNumber({ label, value, min, max, step = 1, unit = '', onChange }) {
+  const clamp = (n) => {
+    if (min != null && n < min) return min;
+    if (max != null && n > max) return max;
+    return n;
+  };
+  const startRef = React.useRef({ x: 0, val: 0 });
+  const onScrubStart = (e) => {
+    e.preventDefault();
+    startRef.current = { x: e.clientX, val: value };
+    const decimals = (String(step).split('.')[1] || '').length;
+    const move = (ev) => {
+      const dx = ev.clientX - startRef.current.x;
+      const raw = startRef.current.val + dx * step;
+      const snapped = Math.round(raw / step) * step;
+      onChange(clamp(Number(snapped.toFixed(decimals))));
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+  return (
+    <div className="twk-num">
+      <span className="twk-num-lbl" onPointerDown={onScrubStart}>{label}</span>
+      <input type="number" value={value} min={min} max={max} step={step}
+             onChange={(e) => onChange(clamp(Number(e.target.value)))} />
+      {unit && <span className="twk-num-unit">{unit}</span>}
+    </div>
+  );
+}
+
+// Relative-luminance contrast pick — checkmarks drawn over a swatch need to
+// read on both #111 and #fafafa without per-option configuration. Hex input
+// only (#rgb / #rrggbb); named or rgb()/hsl() colors fall through to "light".
+function __twkIsLight(hex) {
+  const h = String(hex).replace('#', '');
+  const x = h.length === 3 ? h.replace(/./g, (c) => c + c) : h.padEnd(6, '0');
+  const n = parseInt(x.slice(0, 6), 16);
+  if (Number.isNaN(n)) return true;
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return r * 299 + g * 587 + b * 114 > 148000;
+}
+
+const __TwkCheck = ({ light }) => (
+  <svg viewBox="0 0 14 14" aria-hidden="true">
+    <path d="M3 7.2 5.8 10 11 4.2" fill="none" strokeWidth="2.2"
+          strokeLinecap="round" strokeLinejoin="round"
+          stroke={light ? 'rgba(0,0,0,.78)' : '#fff'} />
+  </svg>
+);
+
+// TweakColor — curated color/palette picker. Each option is either a single
+// hex string or an array of 1-5 hex strings; the card adapts — a lone color
+// renders solid, a palette renders colors[0] as the hero (left ~2/3) with the
+// rest stacked in a sharp column on the right. onChange emits the
+// option in the shape it was passed (string stays string, array stays array).
+// Without options it falls back to the native color input for back-compat.
+function TweakColor({ label, value, options, onChange }) {
+  if (!options || !options.length) {
+    return (
+      <div className="twk-row twk-row-h">
+        <div className="twk-lbl"><span>{label}</span></div>
+        <input type="color" className="twk-swatch" value={value}
+               onChange={(e) => onChange(e.target.value)} />
+      </div>
+    );
+  }
+  // Native <input type=color> emits lowercase hex per the HTML spec, so
+  // compare case-insensitively. String() guards JSON.stringify(undefined),
+  // which returns the primitive undefined (no .toLowerCase).
+  const key = (o) => String(JSON.stringify(o)).toLowerCase();
+  const cur = key(value);
+  return (
+    <TweakRow label={label}>
+      <div className="twk-chips" role="radiogroup">
+        {options.map((o, i) => {
+          const colors = Array.isArray(o) ? o : [o];
+          const [hero, ...rest] = colors;
+          const sup = rest.slice(0, 4);
+          const on = key(o) === cur;
+          return (
+            <button key={i} type="button" className="twk-chip" role="radio"
+                    aria-checked={on} data-on={on ? '1' : '0'}
+                    aria-label={colors.join(', ')} title={colors.join(' · ')}
+                    style={{ background: hero }}
+                    onClick={() => onChange(o)}>
+              {sup.length > 0 && (
+                <span>
+                  {sup.map((c, j) => <i key={j} style={{ background: c }} />)}
+                </span>
+              )}
+              {on && <__TwkCheck light={__twkIsLight(hero)} />}
+            </button>
+          );
+        })}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakButton({ label, onClick, secondary = false }) {
+  return (
+    <button type="button" className={secondary ? 'twk-btn secondary' : 'twk-btn'}
+            onClick={onClick}>{label}</button>
+  );
+}
+
+Object.assign(window, {
+  useTweaks, TweaksPanel, TweakSection, TweakRow,
+  TweakSlider, TweakToggle, TweakRadio, TweakSelect,
+  TweakText, TweakNumber, TweakColor, TweakButton,
+});
+
+//===== data =====
+// Mock data for FlightDesk
+
+const REGIONS = [
+  { id: 'sea', flag: '🇹🇭', name: 'Thailand' },
+  { id: 'vn', flag: '🇻🇳', name: 'Vietnam' },
+  { id: 'seasia', flag: '🌏', name: 'SE Asia' },
+  { id: 'me', flag: '🇦🇪', name: 'Middle East' },
+  { id: 'eu', flag: '🇪🇺', name: 'Europe' },
+  { id: 'jp', flag: '🇯🇵', name: 'Japan & Korea' },
+  { id: 'au', flag: '🇦🇺', name: 'Oceania' },
+  { id: 'us', flag: '🇺🇸', name: 'North America' },
+];
+
+const DESTINATIONS = {
+  sea: [
+    { code: 'BKK', city: 'Bangkok' },
+    { code: 'HKT', city: 'Phuket' },
+    { code: 'CNX', city: 'Chiang Mai' },
+    { code: 'USM', city: 'Koh Samui' },
+    { code: 'KBV', city: 'Krabi' },
+    { code: 'UTP', city: 'Pattaya' },
+    { code: 'HDY', city: 'Hat Yai' },
+    { code: 'CEI', city: 'Chiang Rai' },
+  ],
+  vn: [
+    { code: 'SGN', city: 'Ho Chi Minh' },
+    { code: 'HAN', city: 'Hanoi' },
+    { code: 'DAD', city: 'Da Nang' },
+    { code: 'CXR', city: 'Nha Trang' },
+    { code: 'PQC', city: 'Phu Quoc' },
+    { code: 'HUI', city: 'Hue' },
+    { code: 'VCA', city: 'Can Tho' },
+    { code: 'HPH', city: 'Hai Phong' },
+  ],
+  seasia: [
+    { code: 'SIN', city: 'Singapore' },
+    { code: 'KUL', city: 'Kuala Lumpur' },
+    { code: 'DPS', city: 'Bali' },
+    { code: 'CGK', city: 'Jakarta' },
+    { code: 'MNL', city: 'Manila' },
+    { code: 'CEB', city: 'Cebu' },
+    { code: 'PNH', city: 'Phnom Penh' },
+    { code: 'REP', city: 'Siem Reap' },
+  ],
+  me: [
+    { code: 'DXB', city: 'Dubai' },
+    { code: 'AUH', city: 'Abu Dhabi' },
+    { code: 'DOH', city: 'Doha' },
+    { code: 'RUH', city: 'Riyadh' },
+    { code: 'JED', city: 'Jeddah' },
+    { code: 'MCT', city: 'Muscat' },
+    { code: 'BAH', city: 'Manama' },
+    { code: 'KWI', city: 'Kuwait City' },
+  ],
+  eu: [
+    { code: 'LHR', city: 'London' },
+    { code: 'CDG', city: 'Paris' },
+    { code: 'FRA', city: 'Frankfurt' },
+    { code: 'AMS', city: 'Amsterdam' },
+    { code: 'FCO', city: 'Rome' },
+    { code: 'BCN', city: 'Barcelona' },
+    { code: 'ZRH', city: 'Zurich' },
+    { code: 'IST', city: 'Istanbul' },
+  ],
+  jp: [
+    { code: 'HND', city: 'Tokyo Haneda' },
+    { code: 'NRT', city: 'Tokyo Narita' },
+    { code: 'KIX', city: 'Osaka' },
+    { code: 'ICN', city: 'Seoul' },
+    { code: 'CTS', city: 'Sapporo' },
+    { code: 'FUK', city: 'Fukuoka' },
+    { code: 'PUS', city: 'Busan' },
+    { code: 'OKA', city: 'Okinawa' },
+  ],
+  au: [
+    { code: 'SYD', city: 'Sydney' },
+    { code: 'MEL', city: 'Melbourne' },
+    { code: 'BNE', city: 'Brisbane' },
+    { code: 'PER', city: 'Perth' },
+    { code: 'AKL', city: 'Auckland' },
+    { code: 'CHC', city: 'Christchurch' },
+    { code: 'ADL', city: 'Adelaide' },
+    { code: 'OOL', city: 'Gold Coast' },
+  ],
+  us: [
+    { code: 'JFK', city: 'New York JFK' },
+    { code: 'EWR', city: 'Newark' },
+    { code: 'SFO', city: 'San Francisco' },
+    { code: 'LAX', city: 'Los Angeles' },
+    { code: 'ORD', city: 'Chicago' },
+    { code: 'IAD', city: 'Washington' },
+    { code: 'YYZ', city: 'Toronto' },
+    { code: 'YVR', city: 'Vancouver' },
+  ],
+};
+
+// Flag emojis by IATA code
+const FLAGS = {
+  BKK:'🇹🇭', HKT:'🇹🇭', CNX:'🇹🇭', USM:'🇹🇭', KBV:'🇹🇭', UTP:'🇹🇭', HDY:'🇹🇭', CEI:'🇹🇭',
+  SGN:'🇻🇳', HAN:'🇻🇳', DAD:'🇻🇳', CXR:'🇻🇳', PQC:'🇻🇳', HUI:'🇻🇳', VCA:'🇻🇳', HPH:'🇻🇳',
+  SIN:'🇸🇬', KUL:'🇲🇾', DPS:'🇮🇩', CGK:'🇮🇩', MNL:'🇵🇭', CEB:'🇵🇭', PNH:'🇰🇭', REP:'🇰🇭',
+  DXB:'🇦🇪', AUH:'🇦🇪', DOH:'🇶🇦', RUH:'🇸🇦', JED:'🇸🇦', MCT:'🇴🇲', BAH:'🇧🇭', KWI:'🇰🇼',
+  LHR:'🇬🇧', CDG:'🇫🇷', FRA:'🇩🇪', AMS:'🇳🇱', FCO:'🇮🇹', BCN:'🇪🇸', ZRH:'🇨🇭', IST:'🇹🇷',
+  HND:'🇯🇵', NRT:'🇯🇵', KIX:'🇯🇵', ICN:'🇰🇷', CTS:'🇯🇵', FUK:'🇯🇵', PUS:'🇰🇷', OKA:'🇯🇵',
+  SYD:'🇦🇺', MEL:'🇦🇺', BNE:'🇦🇺', PER:'🇦🇺', AKL:'🇳🇿', CHC:'🇳🇿', ADL:'🇦🇺', OOL:'🇦🇺',
+  JFK:'🇺🇸', EWR:'🇺🇸', SFO:'🇺🇸', LAX:'🇺🇸', ORD:'🇺🇸', IAD:'🇺🇸', YYZ:'🇨🇦', YVR:'🇨🇦',
+  DEL:'🇮🇳', BOM:'🇮🇳', BLR:'🇮🇳', MAA:'🇮🇳', HYD:'🇮🇳', CCU:'🇮🇳',
+};
+
+const COUNTRY_BY_CODE = {
+  BKK:'Thailand', HKT:'Thailand', CNX:'Thailand', USM:'Thailand', KBV:'Thailand',
+  SGN:'Vietnam', HAN:'Vietnam', DAD:'Vietnam', CXR:'Vietnam', PQC:'Vietnam',
+  SIN:'Singapore', KUL:'Malaysia', DPS:'Indonesia', CGK:'Indonesia', MNL:'Philippines', CEB:'Philippines',
+  DXB:'UAE', AUH:'UAE', DOH:'Qatar', RUH:'Saudi Arabia',
+  LHR:'United Kingdom', CDG:'France', FRA:'Germany', AMS:'Netherlands',
+  HND:'Japan', NRT:'Japan', KIX:'Japan', ICN:'South Korea',
+  SYD:'Australia', MEL:'Australia', AKL:'New Zealand',
+  JFK:'United States', SFO:'United States', LAX:'United States', YYZ:'Canada',
+};
+
+// Pre-computed mock results (deterministic so layout doesn't jitter)
+const RESULTS = [
+  { code:'BKK', city:'Bangkok', price:18420, airline:'Vistara', flightNo:'UK 121', dep:'06:15', arr:'11:50', duration:'4h 35m', stops:0, deal:true },
+  { code:'HKT', city:'Phuket', price:22980, airline:'Thai Airways', flightNo:'TG 316', dep:'23:40', arr:'05:25', duration:'4h 45m', stops:0, deal:false },
+  { code:'DXB', city:'Dubai', price:16750, airline:'IndiGo', flightNo:'6E 1463', dep:'02:30', arr:'04:15', duration:'3h 45m', stops:0, deal:true },
+  { code:'SIN', city:'Singapore', price:24600, airline:'Singapore Air', flightNo:'SQ 403', dep:'21:55', arr:'06:35', duration:'5h 40m', stops:0, deal:false },
+  { code:'KUL', city:'Kuala Lumpur', price:19450, airline:'AirAsia', flightNo:'AK 24', dep:'09:10', arr:'17:25', duration:'5h 15m', stops:0, deal:false },
+  { code:'DPS', city:'Bali', price:31280, airline:'Garuda', flightNo:'GA 851', dep:'01:15', arr:'13:40', duration:'8h 25m', stops:1, layover:'KUL', deal:false },
+  { code:'CDG', city:'Paris', price:54200, airline:'Air France', flightNo:'AF 225', dep:'02:55', arr:'07:40', duration:'9h 15m', stops:0, deal:false },
+  { code:'LHR', city:'London', price:48720, airline:'British Airways', flightNo:'BA 142', dep:'13:35', arr:'18:10', duration:'9h 35m', stops:0, deal:false },
+  { code:'NRT', city:'Tokyo', price:62450, airline:'ANA', flightNo:'NH 828', dep:'20:30', arr:'07:45', duration:'7h 45m', stops:0, deal:false },
+];
+
+window.FD_DATA = { REGIONS, DESTINATIONS, FLAGS, COUNTRY_BY_CODE, RESULTS };
+
+//===== icons =====
+// Simple icon set as SVG components
+const Icon = ({ children, size = 16, stroke = 'currentColor', strokeWidth = 1.6, fill = 'none' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={{ display:'inline-block', verticalAlign:'middle' }}>
+    {children}
+  </svg>
+);
+
+const PlaneIcon = (p) => <Icon {...p}><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></Icon>;
+const PlaneTiltIcon = (p) => <Icon {...p}><path d="M14.64 3.66a2 2 0 0 1 2.83 2.83l-4.5 4.5 4.86 9.51-1.79 1.79-7.07-7.07-3.54 3.54.71 3.18-1.42 1.42-2.12-3.54L-.5 17.7l1.41-1.41 3.18.71 3.54-3.54L.56 6.39 2.35 4.6l9.5 4.86 4.5-4.5z"/></Icon>;
+const SearchIcon = (p) => <Icon {...p}><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></Icon>;
+const MicIcon = (p) => <Icon {...p}><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></Icon>;
+const CalendarIcon = (p) => <Icon {...p}><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></Icon>;
+const UsersIcon = (p) => <Icon {...p}><circle cx="9" cy="8" r="3.5"/><path d="M2 21a7 7 0 0 1 14 0M17 11a3 3 0 1 0 0-6M22 21a6 6 0 0 0-4-5.7"/></Icon>;
+const PinIcon = (p) => <Icon {...p}><path d="M12 22s7-7.5 7-13a7 7 0 1 0-14 0c0 5.5 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></Icon>;
+const SeatIcon = (p) => <Icon {...p}><path d="M5 4v8a3 3 0 0 0 3 3h6"/><path d="M19 21H6a2 2 0 0 1-2-2v-4h11l4 6z"/></Icon>;
+const ArrowRight = (p) => <Icon {...p}><path d="M5 12h14M13 6l6 6-6 6"/></Icon>;
+const XIcon = (p) => <Icon {...p}><path d="M6 6l12 12M18 6l-12 12"/></Icon>;
+const SettingsIcon = (p) => <Icon {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8h0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></Icon>;
+const SparkIcon = (p) => <Icon {...p}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/></Icon>;
+const ClockIcon = (p) => <Icon {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></Icon>;
+const TrendIcon = (p) => <Icon {...p}><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></Icon>;
+const ChartIcon = (p) => <Icon {...p}><path d="M3 3v18h18"/><path d="M7 14v4M12 9v9M17 5v13"/></Icon>;
+const TagIcon = (p) => <Icon {...p}><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.2"/></Icon>;
+const RupeeIcon = (p) => <Icon {...p}><path d="M6 4h12M6 9h12M14 4c0 5-4 6-8 6l9 11"/></Icon>;
+const FilterIcon = (p) => <Icon {...p}><path d="M3 5h18M6 12h12M10 19h4"/></Icon>;
+const ChevronDown = (p) => <Icon {...p}><path d="M6 9l6 6 6-6"/></Icon>;
+const RefreshIcon = (p) => <Icon {...p}><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.3L3 16M3 21v-5h5"/></Icon>;
+const KeyboardIcon = (p) => <Icon {...p}><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12"/></Icon>;
+const DotIcon = ({ color = '#10B981', size = 8 }) => (
+  <span style={{ display:'inline-block', width:size, height:size, borderRadius:'50%', background: color, boxShadow: `0 0 8px ${color}`, animation:'blink 2.4s ease-in-out infinite' }} />
+);
+
+Object.assign(window, {
+  Icon, PlaneIcon, PlaneTiltIcon, SearchIcon, MicIcon, CalendarIcon, UsersIcon, PinIcon, SeatIcon,
+  ArrowRight, XIcon, SettingsIcon, SparkIcon, ClockIcon, TrendIcon, ChartIcon, TagIcon, RupeeIcon,
+  FilterIcon, ChevronDown, RefreshIcon, KeyboardIcon, DotIcon
+});
+
+//===== sidebar =====
+// Sidebar — config panel
+
+const sidebarStyles = {
+  sidebar: {
+    width: 280,
+    minWidth: 280,
+    background: 'linear-gradient(180deg, rgba(17,24,39,0.85), rgba(14,21,37,0.85))',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    borderRight: '1px solid var(--border)',
+    padding: '20px 18px 24px',
+    height: '100vh',
+    position: 'sticky',
+    top: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 20,
+    overflowY: 'auto',
+  },
+  logoRow: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    paddingBottom: 16, borderBottom: '1px solid var(--border)',
+  },
+  logo: {
+    display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, fontSize: 16, letterSpacing: '-0.01em',
+  },
+  logoMark: {
+    width: 32, height: 32, borderRadius: 8,
+    background: 'linear-gradient(135deg, #2563EB, #6366F1)',
+    display: 'grid', placeItems: 'center',
+    boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 6px 16px -8px rgba(99,102,241,0.7)',
+  },
+  apiPill: {
+    display: 'flex', alignItems: 'center', gap: 6,
+    fontSize: 10.5, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.08em',
+    background: 'rgba(16,185,129,0.08)',
+    border: '1px solid rgba(16,185,129,0.2)',
+    padding: '4px 8px', borderRadius: 999,
+    fontWeight: 600,
+  },
+  section: { display:'flex', flexDirection:'column', gap: 10 },
+  sectionLabel: {
+    display: 'flex', alignItems: 'center', gap: 8,
+    fontSize: 10.5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-dim)',
+    paddingLeft: 8, borderLeft: '2px solid var(--accent)',
+  },
+  field: {
+    background: 'rgba(255,255,255,0.025)',
+    border: '1px solid var(--border)',
+    borderRadius: 10,
+    padding: '10px 12px',
+    display: 'flex', alignItems: 'center', gap: 10,
+    cursor: 'text',
+    transition: 'border 120ms ease, background 120ms ease',
+  },
+  fieldFocus: { borderColor: 'rgba(37,99,235,0.45)', background:'rgba(37,99,235,0.05)' },
+  fieldLabel: { fontSize: 10, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 },
+  fieldValue: { fontSize: 13, color: 'var(--text)', fontWeight: 500, lineHeight: 1.2 },
+  fieldSub: { fontSize: 11, color: 'var(--text-dim)' },
+  testBtn: {
+    width: '100%',
+    height: 38,
+    borderRadius: 999,
+    border: '1px solid rgba(37,99,235,0.35)',
+    background: 'linear-gradient(180deg, rgba(37,99,235,0.18), rgba(37,99,235,0.08))',
+    color: '#cfd9ff',
+    fontWeight: 600, fontSize: 12, letterSpacing: '0.04em',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+    cursor: 'pointer',
+    transition: 'all 150ms ease',
+  },
+  apiBlock: {
+    border: '1px solid var(--border)',
+    borderRadius: 10,
+    padding: 12,
+    background: 'rgba(255,255,255,0.02)',
+    display: 'flex', flexDirection: 'column', gap: 8,
+  },
+  apiRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11.5 },
+  cabinRow: { display:'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 },
+  cabinChip: {
+    padding: '7px 9px',
+    fontSize: 11, fontWeight: 500,
+    borderRadius: 7,
+    border: '1px solid var(--border)',
+    background: 'transparent',
+    color: 'var(--text-dim)',
+    cursor: 'pointer',
+    textAlign: 'center',
+  },
+  cabinActive: {
+    background: 'rgba(37,99,235,0.18)',
+    borderColor: 'rgba(37,99,235,0.5)',
+    color: '#fff',
+  },
+  shortcutRow: { display:'flex', justifyContent:'space-between', fontSize: 11, color: 'var(--text-dim)' },
+  kbd: {
+    fontFamily: 'JetBrains Mono, monospace',
+    background: 'rgba(255,255,255,0.05)',
+    border: '1px solid var(--border)',
+    borderRadius: 5,
+    padding: '1px 6px',
+    fontSize: 10.5, color: 'var(--text)',
+  },
+};
+
+function Sidebar({ cabin, setCabin, origin, dates, passengers }) {
+  return (
+    <aside style={sidebarStyles.sidebar} data-screen-label="Sidebar">
+      <div style={sidebarStyles.logoRow}>
+        <div style={sidebarStyles.logo}>
+          <div style={sidebarStyles.logoMark}>
+            <PlaneTiltIcon size={18} stroke="#fff" fill="#fff" strokeWidth={0} />
+          </div>
+          <div>
+            FlightDesk
+            <div style={{ fontSize: 9.5, color: 'var(--text-dim)', fontWeight: 500, letterSpacing: '0.14em', marginTop: 1 }}>TERMINAL · v2.4</div>
+          </div>
+        </div>
+        <div style={sidebarStyles.apiPill}>
+          <DotIcon color="#10B981" size={7} />
+          LIVE
+        </div>
+      </div>
+
+      <div style={sidebarStyles.section}>
+        <div style={sidebarStyles.sectionLabel}>Trip Settings</div>
+
+        <div style={sidebarStyles.field}>
+          <PinIcon size={16} stroke="var(--text-dim)" />
+          <div style={{ flex:1 }}>
+            <div style={sidebarStyles.fieldLabel}>Origin</div>
+            <div style={sidebarStyles.fieldValue}>{origin.code} · {origin.city}</div>
+          </div>
+          <ChevronDown size={14} stroke="var(--text-dim-2)" />
+        </div>
+
+        <div style={sidebarStyles.field}>
+          <CalendarIcon size={16} stroke="var(--text-dim)" />
+          <div style={{ flex:1 }}>
+            <div style={sidebarStyles.fieldLabel}>Travel Window</div>
+            <div style={sidebarStyles.fieldValue}>{dates.depart} <span style={{ color:'var(--text-dim-2)' }}>→</span> {dates.return}</div>
+          </div>
+        </div>
+
+        <div style={sidebarStyles.field}>
+          <UsersIcon size={16} stroke="var(--text-dim)" />
+          <div style={{ flex:1 }}>
+            <div style={sidebarStyles.fieldLabel}>Passengers</div>
+            <div style={sidebarStyles.fieldValue}>{passengers.adults} Adults, {passengers.children} Child</div>
+          </div>
+          <ChevronDown size={14} stroke="var(--text-dim-2)" />
+        </div>
+
+        <div>
+          <div style={{ ...sidebarStyles.fieldLabel, marginBottom: 6, paddingLeft: 2 }}>Cabin Class</div>
+          <div style={sidebarStyles.cabinRow}>
+            {['Economy','Premium','Business','First'].map(c => (
+              <button
+                key={c}
+                onClick={() => setCabin(c)}
+                style={{ ...sidebarStyles.cabinChip, ...(cabin === c ? sidebarStyles.cabinActive : {}) }}
+              >{c}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={sidebarStyles.section}>
+        <div style={sidebarStyles.sectionLabel}>Data Source</div>
+        <div style={sidebarStyles.apiBlock}>
+          <div style={sidebarStyles.apiRow}>
+            <span style={{ color:'var(--text-dim)' }}>Provider</span>
+            <span className="mono" style={{ color:'var(--text)' }}>amadeus-v3</span>
+          </div>
+          <div style={sidebarStyles.apiRow}>
+            <span style={{ color:'var(--text-dim)' }}>Region</span>
+            <span className="mono" style={{ color:'var(--text)' }}>ap-south-1</span>
+          </div>
+          <div style={sidebarStyles.apiRow}>
+            <span style={{ color:'var(--text-dim)' }}>Cache</span>
+            <span className="mono" style={{ color:'#10B981' }}>fresh · 12s</span>
+          </div>
+          <div style={sidebarStyles.apiRow}>
+            <span style={{ color:'var(--text-dim)' }}>Quota</span>
+            <span className="mono tabnum" style={{ color:'var(--text)' }}>4,238 / 10k</span>
+          </div>
+          <div style={{ height: 4, background:'rgba(255,255,255,0.06)', borderRadius: 4, overflow:'hidden', marginTop: 2 }}>
+            <div style={{ width: '42%', height: '100%', background:'linear-gradient(90deg, #2563EB, #6366F1)' }} />
+          </div>
+        </div>
+        <button style={sidebarStyles.testBtn} onMouseEnter={e => e.currentTarget.style.background='linear-gradient(180deg, rgba(37,99,235,0.32), rgba(37,99,235,0.14))'} onMouseLeave={e => e.currentTarget.style.background='linear-gradient(180deg, rgba(37,99,235,0.18), rgba(37,99,235,0.08))'}>
+          <RefreshIcon size={13} />
+          TEST CONNECTION
+        </button>
+      </div>
+
+      <div style={sidebarStyles.section}>
+        <div style={sidebarStyles.sectionLabel}>Filters</div>
+        <div style={{ display:'flex', flexDirection:'column', gap: 8 }}>
+          <label style={{ display:'flex', alignItems:'center', justifyContent:'space-between', fontSize: 12, color:'var(--text-dim)' }}>
+            <span>Direct only</span>
+            <Toggle on={false} />
+          </label>
+          <label style={{ display:'flex', alignItems:'center', justifyContent:'space-between', fontSize: 12, color:'var(--text-dim)' }}>
+            <span>Refundable fares</span>
+            <Toggle on={true} />
+          </label>
+          <label style={{ display:'flex', alignItems:'center', justifyContent:'space-between', fontSize: 12, color:'var(--text-dim)' }}>
+            <span>Indian carriers</span>
+            <Toggle on={false} />
+          </label>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 'auto', display:'flex', flexDirection:'column', gap: 6, paddingTop: 16, borderTop:'1px solid var(--border)' }}>
+        <div style={sidebarStyles.shortcutRow}><span>Search</span><span style={sidebarStyles.kbd}>⌘ K</span></div>
+        <div style={sidebarStyles.shortcutRow}><span>Toggle dest</span><span style={sidebarStyles.kbd}>Space</span></div>
+        <div style={sidebarStyles.shortcutRow}><span>Run query</span><span style={sidebarStyles.kbd}>⌘ ↵</span></div>
+      </div>
+    </aside>
+  );
+}
+
+function Toggle({ on }) {
+  return (
+    <span style={{
+      width: 30, height: 16, borderRadius: 999,
+      background: on ? 'rgba(37,99,235,0.6)' : 'rgba(255,255,255,0.08)',
+      border: '1px solid var(--border)',
+      position: 'relative', display:'inline-block',
+      transition: 'background 150ms ease'
+    }}>
+      <span style={{
+        position:'absolute', top: 1, left: on ? 15 : 1,
+        width: 12, height: 12, borderRadius: '50%',
+        background: '#fff',
+        transition: 'left 150ms ease'
+      }} />
+    </span>
+  );
+}
+
+window.Sidebar = Sidebar;
+
+//===== results =====
+// Results section — metrics, chart, flight cards
+
+// Indian number formatting: 1,23,456
+function formatINR(n) {
+  const s = Math.round(n).toString();
+  if (s.length <= 3) return s;
+  const last3 = s.slice(-3);
+  const rest = s.slice(0, -3);
+  const restFormatted = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',');
+  return restFormatted + ',' + last3;
+}
+
+const resultStyles = {
+  metricGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: 14,
+  },
+  metric: {
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0))',
+    border: '1px solid var(--border)',
+    borderRadius: 14,
+    padding: '16px 18px',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  metricGlow: {
+    boxShadow: '0 0 0 1px rgba(16,185,129,0.18) inset, 0 18px 60px -28px rgba(16,185,129,0.55)',
+    background: 'linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.01))',
+  },
+  metricLabel: {
+    fontSize: 10.5, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600,
+  },
+  metricValue: {
+    fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em', marginTop: 6, lineHeight: 1.05,
+  },
+  metricFoot: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10,
+    fontSize: 11, color: 'var(--text-dim)',
+  },
+  metricIconWrap: {
+    position: 'absolute', top: 14, right: 14,
+    width: 28, height: 28, borderRadius: 8,
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid var(--border)',
+    display: 'grid', placeItems: 'center',
+  },
+  chartCard: {
+    border: '1px solid var(--border)',
+    borderRadius: 14,
+    padding: '18px 20px 14px',
+    background: 'rgba(255,255,255,0.015)',
+  },
+  cardGrid: {
+    display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14,
+  },
+  flightCard: {
+    border: '1px solid var(--border)',
+    borderRadius: 14,
+    padding: 18,
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.005))',
+    position: 'relative',
+    transition: 'transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
+    cursor: 'pointer',
+  },
+  bestBadge: {
+    position: 'absolute', top: 14, right: 14,
+    background: 'linear-gradient(135deg, #10B981, #059669)',
+    color: '#04150E',
+    fontSize: 9.5, fontWeight: 700, letterSpacing: '0.1em',
+    padding: '3px 8px', borderRadius: 999,
+    textTransform: 'uppercase',
+    boxShadow: '0 0 0 1px rgba(16,185,129,0.4), 0 4px 12px -2px rgba(16,185,129,0.4)',
+  },
+  pill: {
+    display: 'inline-flex', alignItems: 'center', gap: 5,
+    padding: '3px 8px', borderRadius: 999,
+    fontSize: 11, fontWeight: 500,
+    border: '1px solid var(--border)',
+    background: 'rgba(255,255,255,0.03)',
+    color: 'var(--text-dim)',
+  },
+};
+
+function Metric({ label, value, sub, icon, glow, accent }) {
+  return (
+    <div style={{ ...resultStyles.metric, ...(glow ? resultStyles.metricGlow : {}) }}>
+      <div style={resultStyles.metricIconWrap}>{icon}</div>
+      <div style={resultStyles.metricLabel}>{label}</div>
+      <div style={{ ...resultStyles.metricValue, color: accent || 'var(--text)' }} className="tabnum">{value}</div>
+      <div style={resultStyles.metricFoot}>
+        <span>{sub}</span>
+        <span className="mono" style={{ color: accent || 'var(--text-dim)' }}>●</span>
+      </div>
+    </div>
+  );
+}
+
+function BarChart({ results }) {
+  const sorted = [...results].sort((a,b) => a.price - b.price);
+  const max = Math.max(...sorted.map(r => r.price));
+  const min = Math.min(...sorted.map(r => r.price));
+  // Y-axis gridlines
+  const steps = 5;
+  const niceMax = Math.ceil(max / 10000) * 10000;
+  const gridLines = Array.from({ length: steps + 1 }, (_, i) => Math.round(niceMax * (steps - i) / steps));
+
+  const chartH = 200;
+  const labelGutter = 50;
+
+  return (
+    <div style={resultStyles.chartCard}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom: 14 }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>Fare distribution by destination</div>
+          <div style={{ fontSize: 11.5, color: 'var(--text-dim)', marginTop: 3 }}>Lowest one-way fare per route · sorted cheapest → highest</div>
+        </div>
+        <div style={{ display:'flex', gap: 8, alignItems:'center', fontSize: 11.5, color:'var(--text-dim)' }}>
+          <span style={{ display:'inline-block', width: 10, height: 10, borderRadius: 2, background:'linear-gradient(180deg, #3b82f6, #2563EB)' }}/>
+          One-way base fare (₹)
+        </div>
+      </div>
+
+      <div style={{ display:'flex', gap: 0, height: chartH + 32, position:'relative' }}>
+        {/* Y axis labels */}
+        <div style={{ width: labelGutter, display:'flex', flexDirection:'column', justifyContent:'space-between', paddingTop: 0, paddingBottom: 32 }} className="mono tabnum">
+          {gridLines.map((v, i) => (
+            <div key={i} style={{ fontSize: 10, color: 'var(--text-dim-2)', textAlign:'right', paddingRight: 8 }}>
+              ₹{formatINR(v).replace(/,000$/, 'k').replace(/000$/, 'k')}
+            </div>
+          ))}
+        </div>
+
+        {/* Bars + gridlines */}
+        <div style={{ flex: 1, position: 'relative', borderLeft: '1px solid var(--border)' }}>
+          {/* gridlines */}
+          {gridLines.map((v, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              top: (i / steps) * chartH,
+              left: 0, right: 0,
+              borderTop: i === steps ? '1px solid var(--border-strong)' : '1px dashed rgba(255,255,255,0.05)',
+              height: 1,
+            }} />
+          ))}
+
+          {/* bars */}
+          <div style={{ position:'absolute', inset: 0, display:'flex', alignItems:'flex-end', justifyContent:'space-around', height: chartH, paddingTop: 4 }}>
+            {sorted.map((r, i) => {
+              const h = (r.price / niceMax) * chartH;
+              const isMin = r.price === min;
+              return (
+                <div key={r.code} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap: 6, height: chartH, justifyContent:'flex-end', paddingInline: 4 }}>
+                  <div className="mono tabnum" style={{ fontSize: 9.5, color: isMin ? '#10B981' : 'var(--text-dim-2)' }}>
+                    ₹{formatINR(r.price)}
+                  </div>
+                  <div style={{
+                    width: '70%', maxWidth: 44,
+                    height: h,
+                    borderRadius: '4px 4px 0 0',
+                    background: isMin
+                      ? 'linear-gradient(180deg, #10B981, #047857)'
+                      : 'linear-gradient(180deg, #60a5fa, #2563EB)',
+                    boxShadow: isMin
+                      ? '0 0 24px -6px rgba(16,185,129,0.6), inset 0 1px 0 rgba(255,255,255,0.25)'
+                      : 'inset 0 1px 0 rgba(255,255,255,0.18)',
+                    position: 'relative',
+                  }}>
+                    {isMin && (
+                      <div style={{
+                        position:'absolute', top: -16, left: '50%', transform:'translateX(-50%)',
+                        fontSize: 8.5, color: '#10B981', whiteSpace:'nowrap', fontWeight:600, letterSpacing:'0.08em'
+                      }}>LOW</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* x labels */}
+          <div style={{ position:'absolute', top: chartH + 4, left:0, right:0, display:'flex', justifyContent:'space-around' }}>
+            {sorted.map(r => (
+              <div key={r.code} style={{ flex:1, textAlign:'center', fontSize: 10.5, fontWeight: 600, color: r.price === min ? '#10B981' : 'var(--text-dim)' }} className="mono">
+                {r.code}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FlightCard({ flight }) {
+  const { FLAGS, COUNTRY_BY_CODE } = window.FD_DATA;
+  const flag = FLAGS[flight.code] || '🏳️';
+  const country = COUNTRY_BY_CODE[flight.code] || '';
+  return (
+    <div
+      style={resultStyles.flightCard}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.16)';
+        e.currentTarget.style.boxShadow = '0 24px 60px -30px rgba(37,99,235,0.5)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.borderColor = 'var(--border)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
+    >
+      {flight.deal && <div style={resultStyles.bestBadge}>Best Deal</div>}
+
+      <div style={{ display:'flex', alignItems:'flex-start', gap: 12 }}>
+        <div style={{ fontSize: 28, lineHeight: 1, marginTop: 2 }}>{flag}</div>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 700, letterSpacing:'-0.02em', lineHeight: 1.1 }}>{flight.city}</div>
+          <div style={{ fontSize: 11.5, color: 'var(--text-dim)', marginTop: 2 }}>
+            <span className="mono" style={{ color:'var(--text)' }}>{flight.code}</span> · {country}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginTop: 18, paddingBottom: 14, borderBottom:'1px solid var(--border)' }}>
+        <div>
+          <div style={{ fontSize: 10.5, color:'var(--text-dim)', textTransform:'uppercase', letterSpacing:'0.1em', fontWeight: 600 }}>From</div>
+          <div style={{ fontSize: 11.5, color:'var(--text)', marginTop: 4, fontWeight: 500 }}>{flight.airline}</div>
+          <div className="mono" style={{ fontSize: 10.5, color:'var(--text-dim-2)', marginTop: 2 }}>{flight.flightNo}</div>
+        </div>
+        <div style={{ textAlign:'right' }}>
+          <div className="tabnum" style={{ fontSize: 26, fontWeight: 700, color:'#10B981', letterSpacing:'-0.02em', lineHeight: 1 }}>
+            ₹{formatINR(flight.price)}
+          </div>
+          <div style={{ fontSize: 10.5, color:'var(--text-dim)', marginTop: 4 }}>per adult · one way</div>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 14, display:'flex', alignItems:'center', justifyContent:'space-between', gap: 10 }}>
+        <div style={{ display:'flex', alignItems:'center', gap: 10 }}>
+          <span className="mono tabnum" style={{ fontSize: 15, fontWeight: 600 }}>{flight.dep}</span>
+          <div style={{ display:'flex', alignItems:'center', gap: 4 }}>
+            <div style={{ width: 4, height: 4, borderRadius:'50%', background:'var(--text-dim-2)' }} />
+            <div style={{ width: 28, height: 1, background:'var(--border-strong)' }} />
+            <PlaneTiltIcon size={11} stroke="var(--text-dim)" fill="var(--text-dim)" strokeWidth={0} />
+            <div style={{ width: 28, height: 1, background:'var(--border-strong)' }} />
+            <div style={{ width: 4, height: 4, borderRadius:'50%', background:'var(--text-dim-2)' }} />
+          </div>
+          <span className="mono tabnum" style={{ fontSize: 15, fontWeight: 600 }}>{flight.arr}</span>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 12, display:'flex', gap: 6, flexWrap:'wrap' }}>
+        <span style={resultStyles.pill}><ClockIcon size={11} /> {flight.duration}</span>
+        {flight.stops === 0
+          ? <span style={{ ...resultStyles.pill, color:'#34d399', borderColor:'rgba(16,185,129,0.25)', background:'rgba(16,185,129,0.08)' }}>● Direct</span>
+          : <span style={{ ...resultStyles.pill, color:'#fcd34d', borderColor:'rgba(245,158,11,0.28)', background:'rgba(245,158,11,0.08)' }}>{flight.stops} stop · {flight.layover}</span>
+        }
+        <span style={resultStyles.pill}>Refundable</span>
+      </div>
+    </div>
+  );
+}
+
+function Results({ results }) {
+  const prices = results.map(r => r.price);
+  const cheapest = Math.min(...prices);
+  const cheapestRoute = results.find(r => r.price === cheapest);
+  const median = prices.sort((a,b) => a - b)[Math.floor(prices.length / 2)];
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap: 18 }}>
+      <div style={resultStyles.metricGrid}>
+        <Metric
+          label="Routes Found"
+          value={results.length}
+          sub="across 6 carriers"
+          icon={<ChartIcon size={14} stroke="var(--text-dim)" />}
+        />
+        <Metric
+          label="Cheapest"
+          value={`₹${formatINR(cheapest)}`}
+          sub={`${cheapestRoute.code} · ${cheapestRoute.airline}`}
+          icon={<TagIcon size={14} stroke="#10B981" />}
+          glow
+          accent="#10B981"
+        />
+        <Metric
+          label="Median Price"
+          value={`₹${formatINR(median)}`}
+          sub="vs. ₹28,400 last week"
+          icon={<TrendIcon size={14} stroke="var(--text-dim)" />}
+        />
+        <Metric
+          label="Best Deal To"
+          value={cheapestRoute.city}
+          sub="42% below avg"
+          icon={<SparkIcon size={14} stroke="#F59E0B" />}
+        />
+      </div>
+
+      <BarChart results={results} />
+
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop: 4 }}>
+        <div style={{ fontSize: 14, fontWeight: 600 }}>
+          All flights
+          <span style={{ color:'var(--text-dim)', fontWeight: 500, marginLeft: 8 }}>{results.length} results</span>
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap: 14, fontSize: 11.5, color:'var(--text-dim)' }}>
+          <span style={{ display:'flex', alignItems:'center', gap: 6 }}><FilterIcon size={12} /> Filter</span>
+          <span style={{ display:'flex', alignItems:'center', gap: 6 }}>Sort: <span style={{ color:'var(--text)' }}>Price ↑</span> <ChevronDown size={12} /></span>
+        </div>
+      </div>
+
+      <div style={resultStyles.cardGrid}>
+        {[...results].sort((a,b) => a.price - b.price).map(r => <FlightCard key={r.code} flight={r} />)}
+      </div>
+    </div>
+  );
+}
+
+window.Results = Results;
+window.formatINR = formatINR;
+
+//===== app =====
+// FlightDesk — main app
+const { useState, useEffect, useMemo, useRef } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accentHue": 224,
+  "viewport": "desktop",
+  "layout": "topbar",
+  "showLoader": false,
+  "showEmptyState": false,
+  "density": "comfortable"
+}/*EDITMODE-END*/;
+
+const appStyles = {
+  shell: {
+    display: 'flex',
+    minHeight: '100vh',
+    position: 'relative',
+  },
+  main: {
+    flex: 1,
+    padding: '24px 36px 64px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 22,
+    minWidth: 0,
+  },
+  topbar: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    paddingBottom: 14, borderBottom: '1px solid var(--border)',
+  },
+  crumbs: {
+    display:'flex', alignItems:'center', gap: 8,
+    fontSize: 12, color: 'var(--text-dim)',
+  },
+  topActions: { display:'flex', alignItems:'center', gap: 10 },
+  chip: {
+    display:'inline-flex', alignItems:'center', gap: 6,
+    padding: '5px 10px', borderRadius: 999,
+    fontSize: 11, border:'1px solid var(--border)',
+    background: 'rgba(255,255,255,0.025)',
+    color:'var(--text-dim)',
+  },
+  searchWrap: {
+    position: 'relative',
+    borderRadius: 16,
+    padding: 1.5,
+    background: 'linear-gradient(120deg, #2563EB 0%, #6366F1 100%)',
+    boxShadow: '0 0 0 1px rgba(37,99,235,0.0), 0 30px 80px -40px rgba(99,102,241,0.5)',
+    transition: 'box-shadow 200ms ease',
+  },
+  searchInner: {
+    background: '#0c1322',
+    borderRadius: 14.5,
+    padding: '14px 18px',
+    display: 'flex', alignItems: 'center', gap: 14,
+  },
+  searchInput: {
+    flex: 1,
+    background: 'transparent', border: 'none', outline: 'none',
+    color: 'var(--text)', fontSize: 16, fontFamily: 'Inter',
+    fontWeight: 400,
+  },
+  micBtn: {
+    width: 36, height: 36, borderRadius: 10,
+    border: '1px solid var(--border)',
+    background: 'rgba(255,255,255,0.03)',
+    color: 'var(--text-dim)',
+    display:'grid', placeItems:'center',
+    cursor:'pointer',
+  },
+  resultChips: {
+    display: 'flex', flexWrap: 'wrap', gap: 6,
+  },
+  pillChip: (selected) => ({
+    display:'inline-flex', alignItems:'center', gap: 6,
+    padding: '5px 10px',
+    fontSize: 11.5, fontWeight: 500,
+    borderRadius: 999,
+    border: selected ? '1px solid rgba(37,99,235,0.6)' : '1px solid var(--border)',
+    background: selected ? 'rgba(37,99,235,0.6)' : 'transparent',
+    color: selected ? '#fff' : 'var(--text-dim)',
+    cursor:'pointer',
+    transition: 'all 120ms ease',
+  }),
+  regionTabs: {
+    display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4,
+    borderBottom: '1px solid var(--border)',
+  },
+  regionTab: (active) => ({
+    display:'flex', alignItems:'center', gap: 8,
+    padding: '9px 14px',
+    fontSize: 13, fontWeight: 500,
+    color: active ? 'var(--text)' : 'var(--text-dim)',
+    background: active ? 'rgba(255,255,255,0.045)' : 'transparent',
+    border: '1px solid ' + (active ? 'var(--border-strong)' : 'transparent'),
+    borderRadius: 10,
+    cursor:'pointer',
+    whiteSpace:'nowrap',
+    position: 'relative',
+  }),
+  destGrid: {
+    display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 14,
+  },
+  destChip: (selected) => ({
+    border: '1px solid ' + (selected ? 'transparent' : 'var(--border)'),
+    background: selected
+      ? 'linear-gradient(135deg, #2563EB, #1d4ed8)'
+      : 'rgba(255,255,255,0.02)',
+    borderRadius: 10,
+    padding: '12px 14px',
+    display: 'flex', flexDirection:'column', gap: 2,
+    cursor:'pointer',
+    boxShadow: selected ? '0 0 0 1px rgba(37,99,235,0.55), 0 10px 28px -14px rgba(37,99,235,0.7)' : 'none',
+    transition: 'all 140ms ease',
+  }),
+  destCode: (selected) => ({
+    fontFamily: 'JetBrains Mono',
+    fontSize: 14, fontWeight: 700,
+    color: selected ? '#fff' : 'var(--text)',
+    letterSpacing: '0.04em',
+  }),
+  destCity: (selected) => ({
+    fontSize: 11.5,
+    color: selected ? 'rgba(255,255,255,0.85)' : 'var(--text-dim)',
+  }),
+  selectionBar: {
+    border: '1px solid var(--border)',
+    borderRadius: 12,
+    padding: '12px 14px',
+    background: 'rgba(17,24,39,0.6)',
+    backdropFilter: 'blur(8px)',
+    display:'flex', alignItems:'center', gap: 10, flexWrap:'wrap',
+  },
+  selectedPill: {
+    display:'inline-flex', alignItems:'center', gap: 6,
+    padding: '5px 4px 5px 10px', borderRadius: 999,
+    background: 'rgba(37,99,235,0.18)',
+    border: '1px solid rgba(37,99,235,0.4)',
+    color:'#dbe5ff',
+    fontSize: 12, fontWeight: 500,
+  },
+  pillClose: {
+    width: 18, height: 18, borderRadius: '50%',
+    background: 'rgba(255,255,255,0.08)',
+    display:'grid', placeItems:'center',
+    cursor:'pointer',
+    color:'#fff',
+    border:'none',
+  },
+  searchBtn: {
+    width: '100%', height: 52,
+    border: 'none', cursor: 'pointer',
+    borderRadius: 14,
+    background: 'linear-gradient(120deg, #2563EB 0%, #6366F1 100%)',
+    backgroundSize: '200% 100%',
+    color: '#fff',
+    fontWeight: 600, fontSize: 14, letterSpacing: '0.01em',
+    display:'flex', alignItems:'center', justifyContent:'center', gap: 10,
+    boxShadow: '0 0 0 1px rgba(99,102,241,0.45), 0 22px 50px -22px rgba(37,99,235,0.7)',
+    position:'relative', overflow:'hidden',
+    transition: 'background-position 600ms ease',
+  },
+};
+
+function TopBar() {
+  return (
+    <div style={appStyles.topbar}>
+      <div style={appStyles.crumbs}>
+        <span style={{ color:'var(--text-dim-2)' }}>Workspaces</span>
+        <span style={{ color:'var(--text-dim-2)' }}>/</span>
+        <span style={{ color:'var(--text-dim)' }}>Nimbus Travel Co.</span>
+        <span style={{ color:'var(--text-dim-2)' }}>/</span>
+        <span style={{ color:'var(--text)', fontWeight:500 }}>New Search</span>
+      </div>
+      <div style={appStyles.topActions}>
+        <div style={appStyles.chip}><DotIcon color="#10B981" size={6} /> 142 ms · DEL POP</div>
+        <div style={appStyles.chip}>INR · ₹</div>
+        <div style={{ width: 28, height: 28, borderRadius: '50%', background:'linear-gradient(135deg, #6366F1, #2563EB)', display:'grid', placeItems:'center', fontSize: 11, fontWeight: 700, color:'#fff' }}>AR</div>
+      </div>
+    </div>
+  );
+}
+
+function HeroSearch({ query, setQuery }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div style={{
+      ...appStyles.searchWrap,
+      boxShadow: focused
+        ? '0 0 0 4px rgba(37,99,235,0.18), 0 30px 80px -30px rgba(99,102,241,0.7)'
+        : '0 22px 60px -32px rgba(99,102,241,0.4)',
+    }}>
+      <div style={appStyles.searchInner}>
+        <SearchIcon size={20} stroke="var(--text-dim)" />
+        <input
+          style={appStyles.searchInput}
+          placeholder="Search destinations, cities, or describe your trip…"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+        />
+        <div className="mono" style={{ fontSize: 10.5, color:'var(--text-dim-2)', padding:'2px 7px', border:'1px solid var(--border)', borderRadius: 5 }}>⌘ K</div>
+        <button style={appStyles.micBtn} onMouseEnter={e => e.currentTarget.style.color='#fff'} onMouseLeave={e => e.currentTarget.style.color='var(--text-dim)'}>
+          <MicIcon size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SuggestionChips({ query }) {
+  const suggestions = useMemo(() => {
+    if (!query || query.length < 1) return [];
+    const q = query.toLowerCase();
+    const matches = [];
+    Object.values(window.FD_DATA.DESTINATIONS).flat().forEach(d => {
+      if (d.code.toLowerCase().includes(q) || d.city.toLowerCase().includes(q)) {
+        matches.push(d);
+      }
+    });
+    return matches.slice(0, 5);
+  }, [query]);
+  if (suggestions.length === 0) return null;
+  return (
+    <div style={{ ...appStyles.resultChips, marginTop: -8 }}>
+      <span style={{ fontSize: 11, color:'var(--text-dim-2)', textTransform:'uppercase', letterSpacing:'0.1em', alignSelf:'center', marginRight: 4 }}>Matches</span>
+      {suggestions.map(s => (
+        <span key={s.code} style={appStyles.pillChip(false)}>
+          <span className="mono" style={{ color:'var(--text)', fontWeight: 600 }}>{s.code}</span>
+          <span>{s.city}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function DestinationBrowser({ selected, setSelected }) {
+  const [region, setRegion] = useState('sea');
+  const { REGIONS, DESTINATIONS } = window.FD_DATA;
+  const dests = DESTINATIONS[region];
+
+  function toggle(code) {
+    setSelected(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]);
+  }
+
+  return (
+    <div>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom: 10 }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>Destination browser</div>
+          <div style={{ fontSize: 11.5, color:'var(--text-dim)', marginTop: 2 }}>Pick the cities you want fares for · multi-select supported</div>
+        </div>
+        <div style={{ fontSize: 11.5, color:'var(--text-dim)' }} className="mono">
+          {selected.length} <span style={{ color:'var(--text-dim-2)' }}>selected</span>
+        </div>
+      </div>
+
+      <div style={appStyles.regionTabs} className="noscroll">
+        {REGIONS.map(r => (
+          <div key={r.id} onClick={() => setRegion(r.id)} style={appStyles.regionTab(region === r.id)}>
+            <span>{r.flag}</span>
+            <span>{r.name}</span>
+            {region === r.id && (
+              <span style={{
+                position:'absolute', bottom: -1, left: 12, right: 12, height: 2,
+                background:'linear-gradient(90deg, #2563EB, #6366F1)',
+                borderRadius: 2,
+              }}/>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div style={appStyles.destGrid}>
+        {dests.map(d => {
+          const sel = selected.includes(d.code);
+          return (
+            <div key={d.code} onClick={() => toggle(d.code)} style={appStyles.destChip(sel)}>
+              <div style={appStyles.destCode(sel)}>{d.code}</div>
+              <div style={appStyles.destCity(sel)}>{d.city}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SelectionBar({ selected, setSelected }) {
+  if (selected.length === 0) {
+    return (
+      <div style={{ ...appStyles.selectionBar, color:'var(--text-dim)', fontSize: 12.5 }}>
+        <span style={{ display:'inline-flex', width: 6, height: 6, borderRadius:'50%', background:'var(--text-dim-2)' }} />
+        No destinations selected yet — pick airports above to enable search
+      </div>
+    );
+  }
+  const { FLAGS } = window.FD_DATA;
+  return (
+    <div style={appStyles.selectionBar}>
+      <span style={{ fontSize: 11, color:'var(--text-dim)', textTransform:'uppercase', letterSpacing:'0.1em', fontWeight: 600, marginRight: 4 }}>Querying</span>
+      {selected.map(code => (
+        <span key={code} style={appStyles.selectedPill}>
+          <span style={{ fontSize: 14 }}>{FLAGS[code] || '🏳️'}</span>
+          <span className="mono" style={{ fontWeight: 600 }}>{code}</span>
+          <button style={appStyles.pillClose} onClick={() => setSelected(prev => prev.filter(c => c !== code))}>
+            <XIcon size={10} stroke="#fff" strokeWidth={2.2} />
+          </button>
+        </span>
+      ))}
+      <button onClick={() => setSelected([])} style={{ marginLeft: 'auto', fontSize: 11, color:'var(--text-dim)', background:'none', border:'none', cursor:'pointer' }}>
+        Clear all
+      </button>
+    </div>
+  );
+}
+
+function SearchButton({ count, onSearch }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      style={{
+        ...appStyles.searchBtn,
+        opacity: count === 0 ? 0.55 : 1,
+        cursor: count === 0 ? 'not-allowed' : 'pointer',
+        backgroundPosition: hover ? '100% 0' : '0% 0',
+      }}
+      disabled={count === 0}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onClick={onSearch}
+    >
+      {hover && count > 0 && (
+        <span style={{
+          position:'absolute', inset: 0,
+          background: 'linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%)',
+          backgroundSize: '200% 100%',
+          animation: 'shimmer 1.6s linear infinite',
+          pointerEvents:'none',
+        }} />
+      )}
+      <PlaneTiltIcon size={16} stroke="#fff" fill="#fff" strokeWidth={0} />
+      <span>Search Flights</span>
+      {count > 0 && (
+        <span style={{
+          marginLeft: 4,
+          padding: '2px 8px',
+          fontSize: 11, fontWeight: 600,
+          background:'rgba(255,255,255,0.18)',
+          borderRadius: 999,
+        }} className="mono tabnum">{count} routes</span>
+      )}
+    </button>
+  );
+}
+
+function Loader() {
+  return (
+    <div style={{ position:'fixed', top: 0, left: 0, right: 0, height: 2, overflow:'hidden', zIndex: 999 }}>
+      <div style={{
+        height: '100%', width: '25%',
+        background: 'linear-gradient(90deg, transparent, #2563EB, #6366F1, transparent)',
+        animation: 'loaderPulse 1.2s ease-in-out infinite',
+      }} />
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div style={{
+      border: '1px dashed var(--border-strong)',
+      borderRadius: 16,
+      padding: '64px 24px',
+      textAlign:'center',
+      background: 'radial-gradient(400px 220px at 50% 30%, rgba(37,99,235,0.06), transparent 70%)',
+    }}>
+      <svg width="220" height="100" viewBox="0 0 220 100" style={{ marginBottom: 12 }}>
+        <path d="M 10 70 Q 70 30, 130 50 T 210 30" stroke="#2563EB" strokeWidth="1.5" fill="none" strokeDasharray="6 6" opacity="0.6">
+          <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.5s" repeatCount="indefinite"/>
+        </path>
+        <circle cx="10" cy="70" r="4" fill="#6366F1" opacity="0.8"/>
+        <g transform="translate(195, 24) rotate(35)">
+          <path d="M0 0 l-8 -3 l3 6 l-12 4 l4 5 l13 -3 l4 8 l4 -2 l-2 -10 l8 -3 l-2 -3 z" fill="#2563EB" />
+        </g>
+      </svg>
+      <div style={{ fontSize: 15, fontWeight: 600 }}>Select destinations and search to see fares</div>
+      <div style={{ fontSize: 12.5, color:'var(--text-dim)', marginTop: 6 }}>Tip: pick 4–6 cities to compare best deals across a region</div>
+    </div>
+  );
+}
+
+// ===== Top Trip Bar (alternate layout) =====
+const tripBarStyles = {
+  shell: {
+    borderBottom: '1px solid var(--border)',
+    background: 'linear-gradient(180deg, rgba(17,24,39,0.85), rgba(10,15,30,0.7))',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    position: 'sticky',
+    top: 0,
+    zIndex: 50,
+  },
+  upper: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: '12px 36px',
+    borderBottom: '1px solid var(--border)',
+  },
+  brandRow: { display: 'flex', alignItems: 'center', gap: 24 },
+  logo: { display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em' },
+  logoMark: {
+    width: 30, height: 30, borderRadius: 7,
+    background: 'linear-gradient(135deg, #2563EB, #6366F1)',
+    display: 'grid', placeItems: 'center',
+    boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 6px 16px -8px rgba(99,102,241,0.7)',
+  },
+  nav: { display: 'flex', gap: 4 },
+  navItem: (active) => ({
+    fontSize: 12.5, fontWeight: 500,
+    color: active ? 'var(--text)' : 'var(--text-dim)',
+    padding: '6px 12px', borderRadius: 7,
+    background: active ? 'rgba(255,255,255,0.045)' : 'transparent',
+    border: '1px solid ' + (active ? 'var(--border-strong)' : 'transparent'),
+    cursor: 'pointer',
+  }),
+  apiCluster: { display: 'flex', alignItems: 'center', gap: 10 },
+
+  configRow: {
+    display: 'grid',
+    gridTemplateColumns: '1.1fr 1.4fr 1fr 1.2fr auto',
+    gap: 0,
+    padding: '14px 36px',
+  },
+  cell: {
+    padding: '4px 22px',
+    borderRight: '1px solid var(--border)',
+    display: 'flex', alignItems: 'center', gap: 12,
+    cursor: 'pointer',
+    position: 'relative',
+    transition: 'background 120ms ease',
+  },
+  cellFirst: { paddingLeft: 0 },
+  cellLast: { borderRight: 'none' },
+  cellIcon: {
+    width: 36, height: 36, borderRadius: 9,
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid var(--border)',
+    display: 'grid', placeItems: 'center',
+    flexShrink: 0,
+  },
+  cellBody: { flex: 1, minWidth: 0 },
+  cellLabel: { fontSize: 10, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600 },
+  cellValue: { fontSize: 14, color: 'var(--text)', fontWeight: 600, lineHeight: 1.2, marginTop: 4, letterSpacing: '-0.01em' },
+  cellSub: { fontSize: 11, color: 'var(--text-dim)', marginTop: 2 },
+  cabinSegment: {
+    display: 'flex', gap: 0,
+    border: '1px solid var(--border)', borderRadius: 8,
+    background: 'rgba(255,255,255,0.02)',
+    overflow: 'hidden',
+  },
+  cabinSeg: (active) => ({
+    padding: '7px 10px',
+    fontSize: 11, fontWeight: 600,
+    color: active ? '#fff' : 'var(--text-dim)',
+    background: active ? 'linear-gradient(180deg, rgba(37,99,235,0.35), rgba(37,99,235,0.18))' : 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    borderRight: '1px solid var(--border)',
+  }),
+  runBtn: {
+    height: 44, padding: '0 18px',
+    borderRadius: 10, border: 'none',
+    background: 'linear-gradient(120deg, #2563EB 0%, #6366F1 100%)',
+    color: '#fff', fontWeight: 600, fontSize: 13,
+    display: 'flex', alignItems: 'center', gap: 8,
+    cursor: 'pointer',
+    boxShadow: '0 0 0 1px rgba(99,102,241,0.45), 0 18px 40px -22px rgba(37,99,235,0.7)',
+    whiteSpace: 'nowrap',
+  },
+};
+
+function TopTripBar({ cabin, setCabin, origin, dates, passengers }) {
+  return (
+    <div style={tripBarStyles.shell} data-screen-label="Top Trip Bar">
+      <div style={tripBarStyles.upper}>
+        <div style={tripBarStyles.brandRow}>
+          <div style={tripBarStyles.logo}>
+            <div style={tripBarStyles.logoMark}>
+              <PlaneTiltIcon size={16} stroke="#fff" fill="#fff" strokeWidth={0} />
+            </div>
+            <div>
+              FlightDesk
+              <span className="mono" style={{ fontSize: 9.5, color: 'var(--text-dim)', fontWeight: 500, letterSpacing: '0.14em', marginLeft: 8 }}>v2.4</span>
+            </div>
+          </div>
+          <div style={tripBarStyles.nav}>
+            <div style={tripBarStyles.navItem(true)}>Search</div>
+            <div style={tripBarStyles.navItem(false)}>Watchlist</div>
+            <div style={tripBarStyles.navItem(false)}>History</div>
+            <div style={tripBarStyles.navItem(false)}>Clients</div>
+            <div style={tripBarStyles.navItem(false)}>Reports</div>
+          </div>
+        </div>
+        <div style={tripBarStyles.apiCluster}>
+          <div style={appStyles.chip}><DotIcon color="#10B981" size={6} /> amadeus-v3 · 142ms</div>
+          <div style={appStyles.chip}>4,238 / 10k <span style={{ color:'var(--text-dim-2)' }}>quota</span></div>
+          <div style={appStyles.chip}>INR · ₹</div>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', background:'linear-gradient(135deg, #6366F1, #2563EB)', display:'grid', placeItems:'center', fontSize: 11, fontWeight: 700, color:'#fff' }}>AR</div>
+        </div>
+      </div>
+
+      <div style={tripBarStyles.configRow}>
+        <div style={{ ...tripBarStyles.cell, ...tripBarStyles.cellFirst }}>
+          <div style={tripBarStyles.cellIcon}><PinIcon size={15} stroke="#60a5fa" /></div>
+          <div style={tripBarStyles.cellBody}>
+            <div style={tripBarStyles.cellLabel}>From</div>
+            <div style={tripBarStyles.cellValue}>{origin.code} · {origin.city}</div>
+            <div style={tripBarStyles.cellSub}>Indira Gandhi Intl.</div>
+          </div>
+          <ChevronDown size={14} stroke="var(--text-dim-2)" />
+        </div>
+
+        <div style={tripBarStyles.cell}>
+          <div style={tripBarStyles.cellIcon}><CalendarIcon size={15} stroke="#60a5fa" /></div>
+          <div style={tripBarStyles.cellBody}>
+            <div style={tripBarStyles.cellLabel}>Travel Window</div>
+            <div style={tripBarStyles.cellValue}>{dates.depart} <span style={{ color:'var(--text-dim-2)', fontWeight: 400 }}>→</span> {dates.return}</div>
+            <div style={tripBarStyles.cellSub}>8 nights · flexible ±2</div>
+          </div>
+          <ChevronDown size={14} stroke="var(--text-dim-2)" />
+        </div>
+
+        <div style={tripBarStyles.cell}>
+          <div style={tripBarStyles.cellIcon}><UsersIcon size={15} stroke="#60a5fa" /></div>
+          <div style={tripBarStyles.cellBody}>
+            <div style={tripBarStyles.cellLabel}>Passengers</div>
+            <div style={tripBarStyles.cellValue}>{passengers.adults} Adults</div>
+            <div style={tripBarStyles.cellSub}>{passengers.children} children · 0 infants</div>
+          </div>
+          <ChevronDown size={14} stroke="var(--text-dim-2)" />
+        </div>
+
+        <div style={tripBarStyles.cell}>
+          <div style={tripBarStyles.cellIcon}><SeatIcon size={15} stroke="#60a5fa" /></div>
+          <div style={tripBarStyles.cellBody}>
+            <div style={tripBarStyles.cellLabel}>Cabin Class</div>
+            <div style={{ marginTop: 6 }}>
+              <div style={tripBarStyles.cabinSegment}>
+                {['Economy','Premium','Business','First'].map((c, i, arr) => (
+                  <button
+                    key={c}
+                    onClick={() => setCabin(c)}
+                    style={{ ...tripBarStyles.cabinSeg(cabin === c), borderRight: i === arr.length - 1 ? 'none' : '1px solid var(--border)' }}
+                  >{c === 'Premium' ? 'PE' : c.slice(0,3).toUpperCase()}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ ...tripBarStyles.cell, ...tripBarStyles.cellLast, paddingRight: 0 }}>
+          <button style={tripBarStyles.runBtn}
+            onMouseEnter={e => e.currentTarget.style.background = 'linear-gradient(120deg, #1d4ed8 0%, #4f46e5 100%)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'linear-gradient(120deg, #2563EB 0%, #6366F1 100%)'}
+          >
+            <PlaneTiltIcon size={14} stroke="#fff" fill="#fff" strokeWidth={0} />
+            Run Query
+            <span className="mono" style={{ fontSize: 10, padding: '2px 6px', background:'rgba(255,255,255,0.18)', borderRadius: 4 }}>⌘↵</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState(['BKK','HKT','DXB','SIN','KUL','DPS','CDG','LHR','NRT']);
+  const [cabin, setCabin] = useState('Economy');
+  const [searched, setSearched] = useState(true);
+
+  // Apply density
+  const isCompact = tweaks.density === 'compact';
+
+  const visibleResults = useMemo(() => {
+    return window.FD_DATA.RESULTS.filter(r => selected.includes(r.code));
+  }, [selected]);
+
+  const mobile = tweaks.viewport === 'mobile';
+
+  const origin = { code: 'DEL', city: 'New Delhi' };
+  const dates = { depart: 'Sat, 14 Jun', return: 'Sun, 22 Jun' };
+  const passengers = { adults: 2, children: 0 };
+
+  // For mobile we render a different shell
+  if (mobile) {
+    return (
+      <div style={{ display:'flex', justifyContent:'center', padding: 24, minHeight: '100vh' }}>
+        <MobileApp
+          query={query} setQuery={setQuery}
+          selected={selected} setSelected={setSelected}
+          searched={searched} setSearched={setSearched}
+          cabin={cabin} setCabin={setCabin}
+          origin={origin} dates={dates} passengers={passengers}
+          visibleResults={visibleResults}
+        />
+        <FlightDeskTweaks tweaks={tweaks} setTweak={setTweak} />
+      </div>
+    );
+  }
+
+  const topbarLayout = tweaks.layout === 'topbar';
+
+  return (
+    <div style={{ ...appStyles.shell, flexDirection: topbarLayout ? 'column' : 'row' }}>
+      {tweaks.showLoader && <Loader />}
+
+      {topbarLayout
+        ? <TopTripBar cabin={cabin} setCabin={setCabin} origin={origin} dates={dates} passengers={passengers} />
+        : <Sidebar cabin={cabin} setCabin={setCabin} origin={origin} dates={dates} passengers={passengers} />
+      }
+
+      <main style={{ ...appStyles.main, padding: topbarLayout ? '20px 36px 64px' : appStyles.main.padding }} data-screen-label="Search & Results">
+        {!topbarLayout && <TopBar />}
+
+        <div style={{ display:'flex', flexDirection:'column', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 700, letterSpacing:'-0.02em' }}>Find fares from {origin.city}</div>
+            <div style={{ fontSize: 12.5, color:'var(--text-dim)', marginTop: 4 }}>
+              Compare one-way and return fares across regions · live inventory from 12 carriers
+            </div>
+          </div>
+          <HeroSearch query={query} setQuery={setQuery} />
+          <SuggestionChips query={query} />
+        </div>
+
+        <DestinationBrowser selected={selected} setSelected={setSelected} />
+
+        <SelectionBar selected={selected} setSelected={setSelected} />
+
+        <SearchButton count={selected.length} onSearch={() => setSearched(true)} />
+
+        {tweaks.showEmptyState || !searched || selected.length === 0
+          ? <EmptyState />
+          : <Results results={visibleResults} />
+        }
+      </main>
+
+      <FlightDeskTweaks tweaks={tweaks} setTweak={setTweak} />
+    </div>
+  );
+}
+
+// ===== Mobile (390px) =====
+const mobileStyles = {
+  shell: {
+    width: 390,
+    minHeight: 844,
+    border: '1px solid var(--border-strong)',
+    borderRadius: 36,
+    background: 'var(--bg)',
+    padding: '16px 16px 100px',
+    position: 'relative',
+    overflow: 'hidden',
+    boxShadow: '0 60px 120px -40px rgba(99,102,241,0.4), 0 0 0 1px rgba(255,255,255,0.04)',
+    display: 'flex', flexDirection: 'column', gap: 14,
+  },
+  statusBar: {
+    display:'flex', justifyContent:'space-between', alignItems:'center',
+    fontSize: 12, fontWeight: 600, padding: '0 4px',
+  },
+  appHeader: {
+    display:'flex', justifyContent:'space-between', alignItems:'center', marginTop: 4,
+  },
+  fab: {
+    position:'absolute', bottom: 20, right: 20,
+    width: 52, height: 52, borderRadius: '50%',
+    background: 'linear-gradient(135deg, #2563EB, #6366F1)',
+    display:'grid', placeItems:'center',
+    boxShadow:'0 12px 32px -8px rgba(99,102,241,0.6)',
+    border:'1px solid rgba(255,255,255,0.1)',
+    cursor:'pointer',
+    zIndex: 10,
+  },
+  metricGrid: { display:'grid', gridTemplateColumns:'1fr 1fr', gap: 10 },
+  destScroller: { display:'flex', gap: 8, overflowX:'auto' },
+};
+
+function MobileApp({ query, setQuery, selected, setSelected, searched, setSearched, cabin, setCabin, origin, dates, passengers, visibleResults }) {
+  const [region, setRegion] = useState('sea');
+  const { REGIONS, DESTINATIONS, FLAGS } = window.FD_DATA;
+  const prices = visibleResults.map(r => r.price);
+  const cheapest = prices.length ? Math.min(...prices) : 0;
+  const cheapestRoute = visibleResults.find(r => r.price === cheapest);
+  const median = prices.length ? [...prices].sort((a,b)=>a-b)[Math.floor(prices.length/2)] : 0;
+
+  return (
+    <div style={mobileStyles.shell} data-screen-label="Mobile · 390px">
+      <div style={mobileStyles.statusBar}>
+        <span className="mono">9:41</span>
+        <span style={{ display:'flex', gap: 4, alignItems:'center' }}>
+          <svg width="14" height="10" viewBox="0 0 14 10"><path d="M0 9h2V7H0zm4 0h2V5H4zm4 0h2V3H8zm4 0h2V1h-2z" fill="#fff"/></svg>
+          <svg width="14" height="10" viewBox="0 0 14 10"><rect x="0" y="2" width="11" height="6" rx="1" stroke="#fff" fill="none" /><rect x="2" y="4" width="7" height="2" fill="#fff"/></svg>
+        </span>
+      </div>
+
+      <div style={mobileStyles.appHeader}>
+        <div style={{ display:'flex', alignItems:'center', gap: 8 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 7, background:'linear-gradient(135deg, #2563EB, #6366F1)', display:'grid', placeItems:'center' }}>
+            <PlaneTiltIcon size={15} stroke="#fff" fill="#fff" strokeWidth={0}/>
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>FlightDesk</div>
+        </div>
+        <div style={{ ...appStyles.chip, fontSize: 10 }}><DotIcon color="#10B981" size={6} /> LIVE</div>
+      </div>
+
+      {/* search bar */}
+      <div style={{ ...appStyles.searchWrap, borderRadius: 14, padding: 1.2 }}>
+        <div style={{ ...appStyles.searchInner, padding: '11px 14px', gap: 10, borderRadius: 12.8 }}>
+          <SearchIcon size={16} stroke="var(--text-dim)" />
+          <input style={{ ...appStyles.searchInput, fontSize: 13.5 }} placeholder="Search destinations or describe trip…" value={query} onChange={e => setQuery(e.target.value)} />
+          <MicIcon size={15} stroke="var(--text-dim)" />
+        </div>
+      </div>
+
+      {/* origin/date strip */}
+      <div style={{ display:'flex', gap: 8 }}>
+        <div style={{ flex:1, ...sidebarStyles.field, padding: '8px 10px' }}>
+          <PinIcon size={13} stroke="var(--text-dim)" />
+          <div style={{ flex:1 }}>
+            <div style={{ ...sidebarStyles.fieldLabel, fontSize: 9 }}>From</div>
+            <div style={{ ...sidebarStyles.fieldValue, fontSize: 11.5 }}>{origin.code}</div>
+          </div>
+        </div>
+        <div style={{ flex:2, ...sidebarStyles.field, padding: '8px 10px' }}>
+          <CalendarIcon size={13} stroke="var(--text-dim)" />
+          <div style={{ flex:1 }}>
+            <div style={{ ...sidebarStyles.fieldLabel, fontSize: 9 }}>Dates</div>
+            <div style={{ ...sidebarStyles.fieldValue, fontSize: 11.5 }}>{dates.depart} → {dates.return}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* region tabs */}
+      <div style={{ display:'flex', gap: 6, overflowX:'auto' }} className="noscroll">
+        {REGIONS.map(r => (
+          <div key={r.id} onClick={() => setRegion(r.id)} style={{ ...appStyles.regionTab(region === r.id), padding: '6px 10px', fontSize: 12 }}>
+            <span>{r.flag}</span>
+            <span>{r.name}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* dest chips - horizontal */}
+      <div style={mobileStyles.destScroller} className="noscroll">
+        {DESTINATIONS[region].map(d => {
+          const sel = selected.includes(d.code);
+          return (
+            <div key={d.code} onClick={() => setSelected(prev => prev.includes(d.code) ? prev.filter(c=>c!==d.code) : [...prev, d.code])}
+              style={{ ...appStyles.destChip(sel), minWidth: 110, padding:'10px 12px' }}>
+              <div style={appStyles.destCode(sel)}>{d.code}</div>
+              <div style={appStyles.destCity(sel)}>{d.city}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* selected pills */}
+      {selected.length > 0 && (
+        <div style={{ ...appStyles.selectionBar, padding:'10px 12px', overflowX:'auto', flexWrap:'nowrap' }} className="noscroll">
+          {selected.map(code => (
+            <span key={code} style={{ ...appStyles.selectedPill, flex:'none' }}>
+              <span>{FLAGS[code]}</span>
+              <span className="mono" style={{ fontWeight: 600 }}>{code}</span>
+              <button style={appStyles.pillClose} onClick={() => setSelected(p=>p.filter(c=>c!==code))}>
+                <XIcon size={9} stroke="#fff" strokeWidth={2.2}/>
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* search button */}
+      <SearchButton count={selected.length} onSearch={() => setSearched(true)} />
+
+      {/* metric grid 2x2 */}
+      {searched && visibleResults.length > 0 && (
+        <>
+          <div style={mobileStyles.metricGrid}>
+            <Metric label="Routes" value={visibleResults.length} sub="found" icon={<ChartIcon size={12} stroke="var(--text-dim)"/>} />
+            <Metric label="Cheapest" value={`₹${formatINR(cheapest)}`} sub={cheapestRoute?.code} icon={<TagIcon size={12} stroke="#10B981"/>} glow accent="#10B981"/>
+            <Metric label="Median" value={`₹${formatINR(median)}`} sub="−12% w/w" icon={<TrendIcon size={12} stroke="var(--text-dim)"/>} />
+            <Metric label="Best to" value={cheapestRoute?.city || '—'} sub="42% below avg" icon={<SparkIcon size={12} stroke="#F59E0B"/>} />
+          </div>
+
+          {/* stacked flight cards */}
+          <div style={{ display:'flex', flexDirection:'column', gap: 10 }}>
+            {[...visibleResults].sort((a,b)=>a.price-b.price).slice(0, 4).map(r => <FlightCard key={r.code} flight={r}/>)}
+          </div>
+        </>
+      )}
+
+      {/* FAB */}
+      <div style={mobileStyles.fab}>
+        <SettingsIcon size={20} stroke="#fff" />
+      </div>
+    </div>
+  );
+}
+
+// ===== Tweaks panel =====
+function FlightDeskTweaks({ tweaks, setTweak }) {
+  return (
+    <TweaksPanel title="Tweaks">
+      <TweakSection title="Layout">
+        <TweakRadio value={tweaks.layout} onChange={v => setTweak('layout', v)}
+          options={[{ value:'topbar', label:'Top bar' }, { value:'sidebar', label:'Sidebar' }]} />
+      </TweakSection>
+      <TweakSection title="Viewport">
+        <TweakRadio value={tweaks.viewport} onChange={v => setTweak('viewport', v)}
+          options={[{ value:'desktop', label:'Desktop' }, { value:'mobile', label:'Mobile' }]} />
+      </TweakSection>
+      <TweakSection title="State">
+        <TweakToggle label="Show loading bar" value={tweaks.showLoader} onChange={v => setTweak('showLoader', v)} />
+        <TweakToggle label="Force empty state" value={tweaks.showEmptyState} onChange={v => setTweak('showEmptyState', v)} />
+      </TweakSection>
+    </TweaksPanel>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+</script>
+</body>
+</html>

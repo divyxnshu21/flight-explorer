@@ -1,0 +1,24 @@
+# Python
+*.pyc
+__pycache__/
+.venv/
+venv/
+*.egg-info/
+
+# Secrets
+.env
+backend/.env
+
+# Node
+node_modules/
+dist/
+
+# Vercel
+.vercel/
+
+# IDE
+.vscode/
+.idea/
+
+# Streamlit leftovers
+streamlit_out.txt
