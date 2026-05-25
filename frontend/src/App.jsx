@@ -332,7 +332,7 @@ export default function App() {
           </div>
         </div>
 
-        {mode === 'general' ? (
+        {mode === 'general' || mode === 'custom' ? (
           <>
             {/* Hero search */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -372,12 +372,10 @@ export default function App() {
               color: 'var(--text-dim-2)', fontFamily: 'JetBrains Mono, monospace',
             }}>Work in Progress</div>
             <div style={{ fontSize: 36, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>
-              {mode === 'custom' ? 'Custom Search' : 'Agentic Mode'}
+              Agentic Mode
             </div>
             <div style={{ fontSize: 14, color: 'var(--text-dim)', maxWidth: 340, textAlign: 'center', lineHeight: 1.6 }}>
-              {mode === 'custom'
-                ? 'Build your own search with custom filters and rules. Coming soon.'
-                : 'An AI agent that plans and books your trip end-to-end. Coming soon.'}
+              An AI agent that plans and books your trip end-to-end. Coming soon.
             </div>
           </div>
         )}
