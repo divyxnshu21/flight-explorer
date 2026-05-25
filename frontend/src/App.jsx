@@ -10,7 +10,7 @@ import Toast from './components/Toast.jsx';
 import TopLoader from './components/TopLoader.jsx';
 import RecentSearches from './components/RecentSearches.jsx';
 import KeyboardHelp from './components/KeyboardHelp.jsx';
-import { PlaneTiltIcon, SpinnerIcon, DotIcon, SunIcon, MoonIcon } from './components/Icons.jsx';
+import { PlaneTiltIcon, SpinnerIcon, DotIcon, SunIcon, MoonIcon, SparkIcon } from './components/Icons.jsx';
 import { searchFlights, aiSearch, getHealth, searchAirports } from './lib/api.js';
 import { defaultDepDate, defaultRetDate, encodeShareUrl, decodeShareUrl, timeAgo } from './lib/utils.js';
 import { useLocalStorage } from './lib/useLocalStorage.js';
@@ -29,12 +29,18 @@ export default function App() {
   const [currency, setCurrency]         = useLocalStorage('fd_currency', 'INR');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mode, setMode]                 = useState('general');
+  const [aiSearchOpen, setAiSearchOpen] = useState(false);
   const winWidth = useWindowWidth();
   const isMobile = winWidth < 768;
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    setAiSearchOpen(false);
+    setChips([]);
+  }, [mode]);
 
   const selected = new Set(selectedArr);
   function setSelected(updater) {
@@ -334,11 +340,32 @@ export default function App() {
 
         {mode === 'general' || mode === 'custom' ? (
           <>
-            {/* Hero search */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <SearchBar onSearch={handleSearch} onVoiceResult={handleSearch} loading={chipsLoading} />
-              <SuggestionChips chips={chips} loading={chipsLoading} onToggle={toggleDest} selected={selected} />
-            </div>
+            {/* Hero search — always visible in General; widget/expandable in Custom */}
+            {mode === 'general' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <SearchBar onSearch={handleSearch} onVoiceResult={handleSearch} loading={chipsLoading} />
+                <SuggestionChips chips={chips} loading={chipsLoading} onToggle={toggleDest} selected={selected} />
+              </div>
+            ) : aiSearchOpen ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => { setAiSearchOpen(false); setChips([]); }}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      fontSize: 11.5, fontWeight: 500, color: 'var(--text-dim)',
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontFamily: 'inherit', padding: '2px 0',
+                    }}>
+                    ‹ Hide AI search
+                  </button>
+                </div>
+                <SearchBar onSearch={handleSearch} onVoiceResult={handleSearch} loading={chipsLoading} />
+                <SuggestionChips chips={chips} loading={chipsLoading} onToggle={toggleDest} selected={selected} />
+              </div>
+            ) : (
+              <AiSearchWidget onOpen={() => setAiSearchOpen(true)} />
+            )}
 
             {/* Recent searches */}
             <RecentSearches
@@ -385,6 +412,72 @@ export default function App() {
 
       {toast    && <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />}
       {showHelp && <KeyboardHelp onClose={() => setShowHelp(false)} />}
+    </div>
+  );
+}
+
+function AiSearchWidget({ onOpen }) {
+  const [hover, setHover] = useState(false);
+  const examples = ['Beach destinations under 4h', 'Ski resorts in Europe', 'Weekend getaway from Delhi'];
+
+  return (
+    <div
+      onClick={onOpen}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        borderRadius: 16, padding: 1.5, cursor: 'pointer',
+        background: hover
+          ? 'linear-gradient(120deg, #2563EB 0%, #6366F1 100%)'
+          : 'linear-gradient(120deg, rgba(37,99,235,0.35) 0%, rgba(99,102,241,0.35) 100%)',
+        boxShadow: hover
+          ? '0 0 0 4px rgba(37,99,235,0.12), 0 22px 60px -28px rgba(99,102,241,0.55)'
+          : '0 8px 32px -12px rgba(99,102,241,0.2)',
+        transition: 'background 200ms ease, box-shadow 200ms ease',
+      }}>
+      <div style={{
+        background: 'var(--surface-search)', borderRadius: 14.5,
+        padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16,
+      }}>
+        {/* Icon mark */}
+        <div style={{
+          width: 40, height: 40, borderRadius: 11, flexShrink: 0,
+          background: 'linear-gradient(135deg, #2563EB, #6366F1)',
+          display: 'grid', placeItems: 'center',
+          boxShadow: '0 0 0 1px rgba(99,102,241,0.4), 0 6px 18px -6px rgba(99,102,241,0.6)',
+        }}>
+          <SparkIcon size={17} stroke="#fff" />
+        </div>
+
+        {/* Text */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', lineHeight: 1.2 }}>
+            AI destination search
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px', marginTop: 7 }}>
+            {examples.map(ex => (
+              <span key={ex} style={{
+                fontSize: 11, color: 'var(--text-dim)', background: 'var(--surface-pill)',
+                border: '1px solid var(--border)', borderRadius: 999, padding: '2px 9px',
+              }}>
+                {ex}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '8px 16px', borderRadius: 9, fontSize: 12.5, fontWeight: 600,
+          color: hover ? '#fff' : '#a5b4fc',
+          background: hover ? 'rgba(99,102,241,0.35)' : 'rgba(99,102,241,0.12)',
+          border: '1px solid rgba(99,102,241,0.35)',
+          transition: 'all 180ms ease', whiteSpace: 'nowrap', flexShrink: 0,
+        }}>
+          Open search <span style={{ fontSize: 15, lineHeight: 1 }}>→</span>
+        </div>
+      </div>
     </div>
   );
 }
