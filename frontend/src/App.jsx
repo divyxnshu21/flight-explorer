@@ -15,6 +15,7 @@ import { searchFlights, aiSearch, getHealth, searchAirports } from './lib/api.js
 import { defaultDepDate, defaultRetDate, encodeShareUrl, decodeShareUrl, timeAgo } from './lib/utils.js';
 import { useLocalStorage } from './lib/useLocalStorage.js';
 import { useWindowWidth } from './lib/useWindowWidth.js';
+import { CURRENCIES, getCurrency } from './lib/currencies.js';
 
 const DEFAULT_ORIGIN = { code: 'DEL', city: 'New Delhi', name: 'Indira Gandhi International Airport', country: 'India', flag: '🇮🇳' };
 const DEFAULT_SETTINGS = { origin: DEFAULT_ORIGIN, depDate: defaultDepDate(), retDate: defaultRetDate(), tripType: 1, adults: 1, cabin: 1 };
@@ -25,6 +26,7 @@ export default function App() {
   const [recentSearches, setRecent]     = useLocalStorage('fd_recent', []);
   const [sidebarCollapsed, setSidebar]  = useLocalStorage('fd_sidebar', false);
   const [theme, setTheme]               = useLocalStorage('fd_theme', 'dark');
+  const [currency, setCurrency]         = useLocalStorage('fd_currency', 'INR');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mode, setMode]                 = useState('general');
   const winWidth = useWindowWidth();
@@ -159,6 +161,7 @@ export default function App() {
         tripType:     settings.tripType,
         adults:       settings.adults,
         cabin:        settings.cabin,
+        currency,
       });
 
       setResults(data.results || []);
@@ -277,7 +280,7 @@ export default function App() {
             {mode === 'general' && results !== null && (
               <>
                 <span style={{ color: 'var(--text-dim-2)' }}>/</span>
-                <span style={{ color: '#10B981', fontWeight: 500 }}>{results.length} flights</span>
+                <span style={{ color: 'var(--success)', fontWeight: 500 }}>{results.length} flights</span>
               </>
             )}
           </div>
@@ -325,11 +328,7 @@ export default function App() {
               <DotIcon color={apiStatus ? '#10B981' : '#F59E0B'} size={6} />
               {isMobile ? (apiStatus ? 'Live' : 'Off') : (apiStatus ? 'SerpAPI · Live' : 'Offline')}
             </div>
-            {!isMobile && (
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 999, fontSize: 11, border: '1px solid var(--border)', background: 'var(--surface-pill)', color: 'var(--text-dim)' }}>
-                INR · ₹
-              </div>
-            )}
+            <CurrencyPicker currency={currency} onChange={setCurrency} />
           </div>
         </div>
 
@@ -360,7 +359,7 @@ export default function App() {
             {/* Results / Skeleton / Empty */}
             {searching
               ? <SkeletonCards count={Math.min(destCount, 6)} />
-              : <ResultsPanel results={results} origin={settings.origin?.code} depDate={settings.depDate} />
+              : <ResultsPanel results={results} origin={settings.origin?.code} depDate={settings.depDate} currency={currency} />
             }
           </>
         ) : (
@@ -386,6 +385,64 @@ export default function App() {
 
       {toast    && <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />}
       {showHelp && <KeyboardHelp onClose={() => setShowHelp(false)} />}
+    </div>
+  );
+}
+
+function CurrencyPicker({ currency, onChange }) {
+  const [open, setOpen] = useState(false);
+  const curr = getCurrency(currency);
+
+  return (
+    <div
+      style={{ position: 'relative' }}
+      onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false); }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        title="Change display currency"
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 5,
+          padding: '5px 10px', borderRadius: 999, fontSize: 11,
+          border: '1px solid var(--border)',
+          background: open ? 'var(--surface-hover)' : 'var(--surface-pill)',
+          color: 'var(--text-dim)', cursor: 'pointer',
+          fontFamily: 'inherit', transition: 'all 150ms ease',
+        }}>
+        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: 'var(--text)' }}>{curr.code}</span>
+        <span style={{ color: 'var(--text-dim-2)' }}>·</span>
+        <span>{curr.symbol}</span>
+        <span style={{ fontSize: 8, color: 'var(--text-dim-2)', marginLeft: 1 }}>▾</span>
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 200,
+          background: 'var(--surface-dropdown)', border: '1px solid var(--border-strong)',
+          borderRadius: 10, overflow: 'hidden', minWidth: 196,
+          boxShadow: '0 12px 40px -8px rgba(0,0,0,0.35)',
+        }}>
+          {CURRENCIES.map((c, i) => (
+            <button
+              key={c.code}
+              onMouseDown={() => { onChange(c.code); setOpen(false); }}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                padding: '8px 12px',
+                background: c.code === currency ? 'rgba(37,99,235,0.10)' : 'transparent',
+                border: 'none',
+                borderBottom: i < CURRENCIES.length - 1 ? '1px solid var(--border)' : 'none',
+                cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+              }}
+              onMouseEnter={e => { if (c.code !== currency) e.currentTarget.style.background = 'var(--surface-hover)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = c.code === currency ? 'rgba(37,99,235,0.10)' : 'transparent'; }}>
+              <span className="mono" style={{ fontSize: 12, fontWeight: 700, minWidth: 38, color: c.code === currency ? 'var(--accent)' : 'var(--text)' }}>{c.code}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-dim)', flex: 1 }}>{c.name}</span>
+              <span className="mono" style={{ fontSize: 13, color: 'var(--text-dim-2)', minWidth: 24, textAlign: 'right' }}>{c.symbol}</span>
+              {c.code === currency && <span style={{ fontSize: 10, color: 'var(--accent)', marginLeft: 4 }}>✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

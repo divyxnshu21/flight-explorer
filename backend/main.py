@@ -33,6 +33,7 @@ class SearchRequest(BaseModel):
     trip_type:    int         = Field(1, description="1=round-trip, 2=one-way")
     adults:       int         = Field(1, ge=1, le=9)
     cabin:        int         = Field(1, description="1=Economy 2=Premium 3=Business 4=First")
+    currency:     str         = Field("INR", description="ISO 4217 currency code")
 
 
 class AISearchRequest(BaseModel):
@@ -87,6 +88,7 @@ def search_flights(req: SearchRequest):
         trip_type    = req.trip_type,
         adults       = req.adults,
         cabin        = req.cabin,
+        currency     = req.currency.upper(),
     )
     return {"results": results, "errors": errors}
 

@@ -69,6 +69,7 @@ def search_one(
     trip_type: int,
     adults: int,
     cabin: int,
+    currency: str = "INR",
 ) -> tuple[str, list[dict] | None, str | None]:
     params = {
         "engine":         "google_flights",
@@ -78,7 +79,7 @@ def search_one(
         "type":           trip_type,
         "adults":         adults,
         "travel_class":   cabin,
-        "currency":       "INR",
+        "currency":       currency,
         "hl":             "en",
         "api_key":        api_key,
     }
@@ -117,6 +118,7 @@ def search_many(
     trip_type: int,
     adults: int,
     cabin: int,
+    currency: str = "INR",
     max_workers: int = 8,
 ) -> tuple[list[dict], list[dict]]:
     """Run parallel SerpAPI searches. Returns (results, errors)."""
@@ -126,7 +128,7 @@ def search_many(
     with ThreadPoolExecutor(max_workers=max_workers) as ex:
         futures = {
             ex.submit(search_one, api_key, origin, dest,
-                      dep_date, ret_date, trip_type, adults, cabin): dest
+                      dep_date, ret_date, trip_type, adults, cabin, currency): dest
             for dest in destinations
         }
         for fut in as_completed(futures):

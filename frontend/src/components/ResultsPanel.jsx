@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { formatINR, csvDownload } from '../lib/utils.js';
+import { csvDownload } from '../lib/utils.js';
+import { getCurrency, formatPrice } from '../lib/currencies.js';
 import { ChartIcon, TagIcon, TrendIcon, SparkIcon, FilterIcon, ChevronDown, DownloadIcon } from './Icons.jsx';
 import { FlightCardGrid, FlightCardList } from './FlightCard.jsx';
 import BarChart from './BarChart.jsx';
@@ -108,7 +109,8 @@ function AirlineFilter({ airlines, selected, onToggle, onClear }) {
   );
 }
 
-export default function ResultsPanel({ results, origin, depDate }) {
+export default function ResultsPanel({ results, origin, depDate, currency = 'INR' }) {
+  const { symbol } = getCurrency(currency);
   const [directOnly, setDirectOnly]       = useState(false);
   const [sortIdx, setSortIdx]             = useState(0);
   const [maxPrice, setMaxPrice]           = useState(null);
@@ -181,17 +183,17 @@ export default function ResultsPanel({ results, origin, depDate }) {
       {/* Metrics */}
       <div className="metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
         <Metric label="Routes Found" value={filtered.length} sub={`${directs} direct · ${allAirlines.length} carriers`} icon={<ChartIcon size={14} stroke="var(--text-dim)" />} />
-        <Metric label="Cheapest" value={cheapestRoute ? `₹${formatINR(cheapest)}` : '—'}
+        <Metric label="Cheapest" value={cheapestRoute ? `${symbol}${formatPrice(cheapest, currency)}` : '—'}
           sub={cheapestRoute ? `${cheapestRoute.code} · ${cheapestRoute.airline}` : ''}
           icon={<TagIcon size={14} stroke="var(--success)" />} glow accent="var(--success)" />
-        <Metric label="Median Price" value={median ? `₹${formatINR(median)}` : '—'}
+        <Metric label="Median Price" value={median ? `${symbol}${formatPrice(median, currency)}` : '—'}
           sub="across filtered routes" icon={<TrendIcon size={14} stroke="var(--text-dim)" />} />
         <Metric label="Best Deal To" value={cheapestRoute ? cheapestRoute.city : '—'}
           sub={cheapestRoute ? cheapestRoute.airline : ''}
           icon={<SparkIcon size={14} stroke="#F59E0B" />} />
       </div>
 
-      <BarChart results={filtered} />
+      <BarChart results={filtered} currency={currency} />
 
       {/* Max price filter */}
       {globalMax > globalMin && (
@@ -203,7 +205,7 @@ export default function ResultsPanel({ results, origin, depDate }) {
             min={globalMin} max={globalMax}
             value={activeMax}
             onChange={v => setMaxPrice(v)}
-            formatLabel={v => `₹${formatINR(v)}`}
+            formatLabel={v => `${symbol}${formatPrice(v, currency)}`}
           />
         </div>
       )}
@@ -251,7 +253,7 @@ export default function ResultsPanel({ results, origin, depDate }) {
             ))}
           </div>
 
-          <button onClick={() => csvDownload(filtered)} style={{
+          <button onClick={() => csvDownload(filtered, currency)} style={{
             display: 'flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 500,
             color: 'var(--text-dim)', background: 'var(--surface-pill)',
             border: '1px solid var(--border)', borderRadius: 7, padding: '5px 10px',
@@ -267,13 +269,13 @@ export default function ResultsPanel({ results, origin, depDate }) {
         viewMode === 'grid' ? (
           <div className="cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
             {filtered.map((r, i) => (
-              <FlightCardGrid key={`${r.code}-${i}`} flight={r} origin={origin} depDate={depDate} />
+              <FlightCardGrid key={`${r.code}-${i}`} flight={r} origin={origin} depDate={depDate} currency={currency} />
             ))}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {filtered.map((r, i) => (
-              <FlightCardList key={`${r.code}-${i}`} flight={r} origin={origin} depDate={depDate} />
+              <FlightCardList key={`${r.code}-${i}`} flight={r} origin={origin} depDate={depDate} currency={currency} />
             ))}
           </div>
         )

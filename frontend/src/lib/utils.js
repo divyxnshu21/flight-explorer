@@ -56,8 +56,8 @@ export function defaultRetDate() {
   return d.toISOString().slice(0, 10);
 }
 
-export function csvDownload(rows) {
-  const headers = ['Destination', 'Code', 'City', 'Country', 'Airline', 'Price (INR)', 'Duration', 'Stops', 'Departure', 'Arrival', 'Type'];
+export function csvDownload(rows, currency = 'INR') {
+  const headers = ['Destination', 'Code', 'City', 'Country', 'Airline', `Price (${currency})`, 'Duration', 'Stops', 'Departure', 'Arrival', 'Type'];
   const lines = [
     headers.join(','),
     ...rows.map(r => [

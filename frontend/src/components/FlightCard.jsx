@@ -1,5 +1,5 @@
 import { PlaneTiltIcon, ClockIcon } from './Icons.jsx';
-import { formatINR } from '../lib/utils.js';
+import { getCurrency, formatPrice } from '../lib/currencies.js';
 
 const PILL_INCLUDED = { border: '1px solid rgba(16,185,129,0.25)', background: 'rgba(16,185,129,0.07)', color: 'var(--success)' };
 const PILL_FEE      = { border: '1px solid rgba(245,158,11,0.28)',  background: 'rgba(245,158,11,0.07)',  color: 'var(--warn)' };
@@ -39,10 +39,11 @@ function googleFlightsUrl(flight, origin, depDate) {
   return `https://www.google.com/travel/flights?q=flights+from+${origin || 'DEL'}+to+${flight.code}+on+${depDate || ''}`;
 }
 
-export function FlightCardGrid({ flight, origin, depDate }) {
+export function FlightCardGrid({ flight, origin, depDate, currency = 'INR' }) {
   const isDirect = flight.stops === 'Direct';
   const depTime  = parseTime(flight.departure);
   const arrTime  = parseTime(flight.arrival);
+  const { symbol } = getCurrency(currency);
 
   return (
     <div
@@ -91,7 +92,7 @@ export function FlightCardGrid({ flight, origin, depDate }) {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div className="tabnum" style={{ fontSize: 26, fontWeight: 700, color: 'var(--success)', letterSpacing: '-0.02em', lineHeight: 1 }}>
-            ₹{formatINR(flight.price)}
+            {symbol}{formatPrice(flight.price, currency)}
           </div>
           <div style={{ fontSize: 10.5, color: 'var(--text-dim)', marginTop: 4 }}>per adult</div>
         </div>
@@ -142,10 +143,11 @@ export function FlightCardGrid({ flight, origin, depDate }) {
   );
 }
 
-export function FlightCardList({ flight, origin, depDate }) {
+export function FlightCardList({ flight, origin, depDate, currency = 'INR' }) {
   const isDirect = flight.stops === 'Direct';
   const depTime  = parseTime(flight.departure);
   const arrTime  = parseTime(flight.arrival);
+  const { symbol } = getCurrency(currency);
 
   return (
     <div
@@ -218,7 +220,7 @@ export function FlightCardList({ flight, origin, depDate }) {
             <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>Best Deal</div>
           )}
           <div className="tabnum" style={{ fontSize: 22, fontWeight: 700, color: 'var(--success)', letterSpacing: '-0.02em', lineHeight: 1 }}>
-            ₹{formatINR(flight.price)}
+            {symbol}{formatPrice(flight.price, currency)}
           </div>
           <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>per adult</div>
         </div>

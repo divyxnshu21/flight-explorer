@@ -13,7 +13,7 @@ export async function searchAirports(q, limit = 10) {
   return request(`/api/airports/search?q=${encodeURIComponent(q)}&limit=${limit}`);
 }
 
-export async function searchFlights({ origin, destinations, depDate, retDate, tripType, adults, cabin }) {
+export async function searchFlights({ origin, destinations, depDate, retDate, tripType, adults, cabin, currency = 'INR' }) {
   return request('/api/search', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -25,6 +25,7 @@ export async function searchFlights({ origin, destinations, depDate, retDate, tr
       trip_type: tripType,
       adults,
       cabin,
+      currency,
     }),
   });
 }

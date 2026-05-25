@@ -1,6 +1,7 @@
-import { formatINR } from '../lib/utils.js';
+import { getCurrency, formatPrice } from '../lib/currencies.js';
 
-export default function BarChart({ results }) {
+export default function BarChart({ results, currency = 'INR' }) {
+  const { symbol } = getCurrency(currency);
   const byCode = {};
   for (const r of results) {
     if (!byCode[r.code] || r.price < byCode[r.code].price) byCode[r.code] = r;
@@ -71,7 +72,7 @@ export default function BarChart({ results }) {
                   color: isMin ? '#10B981' : isMax ? '#f87171' : 'var(--text-dim-2)',
                   whiteSpace: 'nowrap',
                 }}>
-                  ₹{formatINR(r.price)}
+                  {symbol}{formatPrice(r.price, currency)}
                 </div>
               </div>
 
