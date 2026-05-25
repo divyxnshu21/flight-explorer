@@ -34,7 +34,7 @@ export default function KeyboardHelp({ onClose }) {
       <div style={{
         position: 'fixed', top: '50%', left: '50%', zIndex: 999,
         transform: 'translate(-50%, -50%)',
-        background: '#0f1828',
+        background: 'var(--surface-dropdown)',
         border: '1px solid var(--border-strong)',
         borderRadius: 16, padding: '24px 28px',
         width: 340,
@@ -56,11 +56,11 @@ export default function KeyboardHelp({ onClose }) {
                 {keys.map((k, j) => (
                   <kbd key={j} style={{
                     fontFamily: 'JetBrains Mono, monospace',
-                    background: 'rgba(255,255,255,0.07)',
+                    background: 'var(--kbd-bg)',
                     border: '1px solid var(--border-strong)',
                     borderRadius: 6, padding: '3px 8px',
                     fontSize: 11, color: 'var(--text)', fontWeight: 600,
-                    boxShadow: '0 2px 0 rgba(0,0,0,0.3)',
+                    boxShadow: '0 2px 0 rgba(0,0,0,0.15)',
                   }}>{k}</kbd>
                 ))}
               </div>
@@ -69,7 +69,7 @@ export default function KeyboardHelp({ onClose }) {
         </div>
 
         <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)', fontSize: 11, color: 'var(--text-dim-2)', textAlign: 'center' }}>
-          Press <kbd style={{ fontFamily: 'JetBrains Mono', fontSize: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid var(--border)', borderRadius: 4, padding: '1px 5px' }}>?</kbd> anytime to open this
+          Press <kbd style={{ fontFamily: 'JetBrains Mono', fontSize: 10, background: 'var(--kbd-bg)', border: '1px solid var(--border)', borderRadius: 4, padding: '1px 5px' }}>?</kbd> anytime to open this
         </div>
       </div>
     </>

@@ -53,7 +53,7 @@ export default function QueryBar({ selected, onRemove, onClear, onAdd }) {
     return (
       <div style={{
         border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px',
-        background: 'rgba(17,24,39,0.6)',
+        background: 'var(--surface-querybar)',
         display: 'flex', alignItems: 'center', gap: 10,
       }}>
         <span style={{ display: 'inline-flex', width: 6, height: 6, borderRadius: '50%', background: 'var(--text-dim-2)', flexShrink: 0 }} />
@@ -73,7 +73,7 @@ export default function QueryBar({ selected, onRemove, onClear, onAdd }) {
   return (
     <div style={{
       border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px',
-      background: 'rgba(17,24,39,0.6)', backdropFilter: 'blur(8px)',
+      background: 'var(--surface-querybar)', backdropFilter: 'blur(8px)',
       display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
       position: 'relative',
     }}>
@@ -120,9 +120,9 @@ export default function QueryBar({ selected, onRemove, onClear, onAdd }) {
           {results.length > 0 && (
             <div style={{
               position: 'absolute', bottom: 'calc(100% + 6px)', left: 0, right: 0,
-              background: '#0f1828', border: '1px solid var(--border-strong)',
+              background: 'var(--surface-dropdown)', border: '1px solid var(--border-strong)',
               borderRadius: 10, overflow: 'hidden',
-              boxShadow: '0 -12px 40px -8px rgba(0,0,0,0.6)', zIndex: 999, maxHeight: 240, overflowY: 'auto',
+              boxShadow: '0 -12px 40px -8px rgba(0,0,0,0.4)', zIndex: 999, maxHeight: 240, overflowY: 'auto',
             }}>
               {results.map((apt, i) => (
                 <div key={apt.code} onMouseDown={() => pick(apt)} onMouseEnter={() => setActiveIdx(i)}
@@ -148,7 +148,7 @@ export default function QueryBar({ selected, onRemove, onClear, onAdd }) {
         <button onClick={() => setAddOpen(true)} style={{
           display: 'inline-flex', alignItems: 'center', gap: 4,
           padding: '4px 10px', borderRadius: 999, fontSize: 11.5, fontWeight: 500,
-          color: 'var(--text-dim)', background: 'rgba(255,255,255,0.04)',
+          color: 'var(--text-dim)', background: 'var(--surface-raised)',
           border: '1px dashed var(--border)', cursor: 'pointer', fontFamily: 'inherit',
         }}>
           <PlusIcon size={11} /> Add airport

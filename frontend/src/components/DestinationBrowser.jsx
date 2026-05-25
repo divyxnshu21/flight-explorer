@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { REGIONS, COUNTRIES } from '../lib/destinations.js';
 
 export default function DestinationBrowser({ selected, onToggle, onSetMany }) {
-  const [region, setRegion] = useState('domestic');
+  const [region, setRegion] = useState('seasia');
   // Track expanded sections — default nothing expanded = all collapsed
   const [expanded, setExpanded] = useState(new Set());
 
@@ -77,12 +77,15 @@ export default function DestinationBrowser({ selected, onToggle, onSetMany }) {
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '9px 14px', fontSize: 13, fontWeight: 500,
                 color: active ? 'var(--text)' : 'var(--text-dim)',
-                background: active ? 'rgba(255,255,255,0.045)' : 'transparent',
+                background: active ? 'var(--surface-tab-active)' : 'transparent',
                 border: '1px solid ' + (active ? 'var(--border-strong)' : 'transparent'),
                 borderRadius: 10, cursor: 'pointer', whiteSpace: 'nowrap',
                 position: 'relative',
               }}>
-              <span>{r.flag}</span>
+              {r.cc
+                ? <span className={`fi fi-${r.cc}`} style={{ width: 20, height: 14, borderRadius: 2, display: 'inline-block', backgroundSize: 'cover', flexShrink: 0 }} />
+                : <span>{r.flag}</span>
+              }
               <span>{r.name}</span>
               {anySelected && !active && (
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2563EB', flexShrink: 0 }} />
@@ -119,13 +122,16 @@ export default function DestinationBrowser({ selected, onToggle, onSetMany }) {
                 {/* Chevron */}
                 <span style={{
                   width: 18, height: 18, borderRadius: 5, flexShrink: 0,
-                  background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)',
+                  background: 'var(--surface-hover-2)', border: '1px solid var(--border)',
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 11, color: 'var(--text-dim)',
                   transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
                   transition: 'transform 180ms ease',
                 }}>▾</span>
-                <span style={{ fontSize: 14 }}>{country.flag}</span>
+                {country.cc
+                  ? <span className={`fi fi-${country.cc}`} style={{ width: 22, height: 15, borderRadius: 3, display: 'inline-block', backgroundSize: 'cover', flexShrink: 0, border: '1px solid var(--border)' }} />
+                  : <span style={{ fontSize: 14 }}>{country.flag}</span>
+                }
                 <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-dim)', letterSpacing: '0.04em' }}>
                   {country.name}
                 </span>
@@ -162,7 +168,7 @@ export default function DestinationBrowser({ selected, onToggle, onSetMany }) {
                         onClick={() => onToggle(d.code)}
                         style={{
                           border: '1px solid ' + (sel ? 'transparent' : 'var(--border)'),
-                          background: sel ? 'linear-gradient(135deg, #2563EB, #1d4ed8)' : 'rgba(255,255,255,0.02)',
+                          background: sel ? 'linear-gradient(135deg, #2563EB, #1d4ed8)' : 'var(--surface-card)',
                           borderRadius: 10, padding: '11px 13px',
                           display: 'flex', flexDirection: 'column', gap: 2,
                           cursor: 'pointer',

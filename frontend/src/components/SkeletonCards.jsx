@@ -1,6 +1,6 @@
 function SkeletonCard() {
   const shimmer = {
-    background: 'linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%)',
+    background: 'linear-gradient(90deg, var(--shimmer-base) 25%, var(--shimmer-high) 50%, var(--shimmer-base) 75%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.6s linear infinite',
     borderRadius: 6,
@@ -12,7 +12,7 @@ function SkeletonCard() {
   return (
     <div style={{
       border: '1px solid var(--border)', borderRadius: 14, padding: 18,
-      background: 'linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0.004))',
+      background: 'var(--surface-card)',
     }}>
       {/* city + flag */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 18 }}>
@@ -46,16 +46,16 @@ export default function SkeletonCards({ count = 6 }) {
       <div className="metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} style={{ border: '1px solid var(--border)', borderRadius: 14, padding: '16px 18px' }}>
-            <div style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.6s linear infinite', borderRadius: 6, height: 10, width: '50%', marginBottom: 10 }} />
-            <div style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.6s linear infinite', borderRadius: 6, height: 28, width: '75%', marginBottom: 12 }} />
-            <div style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.6s linear infinite', borderRadius: 6, height: 10, width: '60%' }} />
+            <div style={{ background: 'linear-gradient(90deg, var(--shimmer-base) 25%, var(--shimmer-high) 50%, var(--shimmer-base) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.6s linear infinite', borderRadius: 6, height: 10, width: '50%', marginBottom: 10 }} />
+            <div style={{ background: 'linear-gradient(90deg, var(--shimmer-base) 25%, var(--shimmer-high) 50%, var(--shimmer-base) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.6s linear infinite', borderRadius: 6, height: 28, width: '75%', marginBottom: 12 }} />
+            <div style={{ background: 'linear-gradient(90deg, var(--shimmer-base) 25%, var(--shimmer-high) 50%, var(--shimmer-base) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.6s linear infinite', borderRadius: 6, height: 10, width: '60%' }} />
           </div>
         ))}
       </div>
       {/* chart skeleton */}
-      <div style={{ border: '1px solid var(--border)', borderRadius: 14, padding: '18px 20px', height: 260, background: 'rgba(255,255,255,0.01)' }}>
-        <div style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.6s linear infinite', borderRadius: 6, height: 14, width: '35%', marginBottom: 8 }} />
-        <div style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.6s linear infinite', borderRadius: 6, height: 10, width: '50%' }} />
+      <div style={{ border: '1px solid var(--border)', borderRadius: 14, padding: '18px 20px', height: 260, background: 'var(--surface-card)' }}>
+        <div style={{ background: 'linear-gradient(90deg, var(--shimmer-base) 25%, var(--shimmer-high) 50%, var(--shimmer-base) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.6s linear infinite', borderRadius: 6, height: 14, width: '35%', marginBottom: 8 }} />
+        <div style={{ background: 'linear-gradient(90deg, var(--shimmer-base) 25%, var(--shimmer-high) 50%, var(--shimmer-base) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.6s linear infinite', borderRadius: 6, height: 10, width: '50%' }} />
       </div>
       {/* cards */}
       <div className="cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>

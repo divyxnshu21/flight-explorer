@@ -10,7 +10,7 @@ import Toast from './components/Toast.jsx';
 import TopLoader from './components/TopLoader.jsx';
 import RecentSearches from './components/RecentSearches.jsx';
 import KeyboardHelp from './components/KeyboardHelp.jsx';
-import { PlaneTiltIcon, SpinnerIcon, DotIcon } from './components/Icons.jsx';
+import { PlaneTiltIcon, SpinnerIcon, DotIcon, SunIcon, MoonIcon } from './components/Icons.jsx';
 import { searchFlights, aiSearch, getHealth, searchAirports } from './lib/api.js';
 import { defaultDepDate, defaultRetDate, encodeShareUrl, decodeShareUrl, timeAgo } from './lib/utils.js';
 import { useLocalStorage } from './lib/useLocalStorage.js';
@@ -24,9 +24,15 @@ export default function App() {
   const [selectedArr, setSelectedArr]   = useLocalStorage('fd_selected', []);
   const [recentSearches, setRecent]     = useLocalStorage('fd_recent', []);
   const [sidebarCollapsed, setSidebar]  = useLocalStorage('fd_sidebar', false);
+  const [theme, setTheme]               = useLocalStorage('fd_theme', 'dark');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [mode, setMode]                 = useState('general');
   const winWidth = useWindowWidth();
   const isMobile = winWidth < 768;
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const selected = new Set(selectedArr);
   function setSelected(updater) {
@@ -242,16 +248,33 @@ export default function App() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   width: 30, height: 30, borderRadius: 8, border: '1px solid var(--border)',
-                  background: 'rgba(255,255,255,0.04)', color: 'var(--text-dim)',
+                  background: 'var(--surface-raised)', color: 'var(--text-dim)',
                   cursor: 'pointer', fontSize: 15, marginRight: 2,
                 }}>
                 ☰
               </button>
             )}
-            <img src="/logo.png" alt="AeroScan" style={{ width: 84, height: 22, objectFit: 'contain', objectPosition: 'left center', display: 'block' }} />
-            <span style={{ color: 'var(--text-dim-2)' }}>/</span>
-            <span style={{ color: 'var(--text)', fontWeight: 500 }}>New Search</span>
-            {results !== null && (
+            {/* Mode tabs */}
+            {[
+              { id: 'general', label: 'General Search' },
+              { id: 'custom',  label: 'Custom' },
+              { id: 'agentic', label: 'Agentic Mode' },
+            ].map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => setMode(id)}
+                style={{
+                  padding: '3px 10px', borderRadius: 7, border: 'none',
+                  background: mode === id ? 'rgba(99,102,241,0.18)' : 'transparent',
+                  color: mode === id ? '#a5b4fc' : 'var(--text-dim)',
+                  fontWeight: mode === id ? 600 : 400,
+                  fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'background 150ms ease, color 150ms ease',
+                }}>
+                {label}
+              </button>
+            ))}
+            {mode === 'general' && results !== null && (
               <>
                 <span style={{ color: 'var(--text-dim-2)' }}>/</span>
                 <span style={{ color: '#10B981', fontWeight: 500 }}>{results.length} flights</span>
@@ -264,7 +287,7 @@ export default function App() {
               <button onClick={copyShareUrl} style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px',
                 borderRadius: 999, fontSize: 11, border: '1px solid var(--border)',
-                background: copied ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.025)',
+                background: copied ? 'rgba(16,185,129,0.12)' : 'var(--surface-pill)',
                 color: copied ? '#34d399' : 'var(--text-dim)',
                 cursor: 'pointer', fontFamily: 'inherit', transition: 'all 200ms ease',
               }}>
@@ -277,51 +300,88 @@ export default function App() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px',
                   borderRadius: 999, fontSize: 11, border: '1px solid var(--border)',
-                  background: 'rgba(255,255,255,0.025)', color: 'var(--text-dim)',
+                  background: 'var(--surface-pill)', color: 'var(--text-dim)',
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}>
                 ? Shortcuts
               </button>
             )}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 999, fontSize: 11, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.025)', color: 'var(--text-dim)' }}>
+            {/* Theme toggle */}
+            <button
+              onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 10px',
+                borderRadius: 999, fontSize: 11, border: '1px solid var(--border)',
+                background: 'var(--surface-pill)', color: 'var(--text-dim)',
+                cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms ease',
+              }}>
+              {theme === 'dark'
+                ? <SunIcon size={12} stroke="var(--text-dim)" />
+                : <MoonIcon size={12} stroke="var(--text-dim)" />}
+              {!isMobile && (theme === 'dark' ? 'Light' : 'Dark')}
+            </button>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 999, fontSize: 11, border: '1px solid var(--border)', background: 'var(--surface-pill)', color: 'var(--text-dim)' }}>
               <DotIcon color={apiStatus ? '#10B981' : '#F59E0B'} size={6} />
               {isMobile ? (apiStatus ? 'Live' : 'Off') : (apiStatus ? 'SerpAPI · Live' : 'Offline')}
             </div>
             {!isMobile && (
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 999, fontSize: 11, border: '1px solid var(--border)', background: 'rgba(255,255,255,0.025)', color: 'var(--text-dim)' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 999, fontSize: 11, border: '1px solid var(--border)', background: 'var(--surface-pill)', color: 'var(--text-dim)' }}>
                 INR · ₹
               </div>
             )}
           </div>
         </div>
 
-        {/* Hero search */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <SearchBar onSearch={handleSearch} onVoiceResult={handleSearch} loading={chipsLoading} />
-          <SuggestionChips chips={chips} loading={chipsLoading} onToggle={toggleDest} selected={selected} />
-        </div>
+        {mode === 'general' ? (
+          <>
+            {/* Hero search */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <SearchBar onSearch={handleSearch} onVoiceResult={handleSearch} loading={chipsLoading} />
+              <SuggestionChips chips={chips} loading={chipsLoading} onToggle={toggleDest} selected={selected} />
+            </div>
 
-        {/* Recent searches */}
-        <RecentSearches
-          searches={displayRecent}
-          onRestore={restoreSearch}
-          onClear={() => setRecent([])}
-        />
+            {/* Recent searches */}
+            <RecentSearches
+              searches={displayRecent}
+              onRestore={restoreSearch}
+              onClear={() => setRecent([])}
+            />
 
-        {/* Destination browser */}
-        <DestinationBrowser selected={selected} onToggle={toggleDest} onSetMany={setSelected} />
+            {/* Destination browser */}
+            <DestinationBrowser selected={selected} onToggle={toggleDest} onSetMany={setSelected} />
 
-        {/* Query bar */}
-        <QueryBar selected={selected} onRemove={removeDest} onClear={() => setSelected(new Set())} onAdd={addDest} />
+            {/* Query bar */}
+            <QueryBar selected={selected} onRemove={removeDest} onClear={() => setSelected(new Set())} onAdd={addDest} />
 
-        {/* Search button */}
-        <SearchButton count={destCount} loading={searching} onSearch={runSearch} />
+            {/* Search button */}
+            <SearchButton count={destCount} loading={searching} onSearch={runSearch} />
 
-        {/* Results / Skeleton / Empty */}
-        {searching
-          ? <SkeletonCards count={Math.min(destCount, 6)} />
-          : <ResultsPanel results={results} origin={settings.origin?.code} depDate={settings.depDate} />
-        }
+            {/* Results / Skeleton / Empty */}
+            {searching
+              ? <SkeletonCards count={Math.min(destCount, 6)} />
+              : <ResultsPanel results={results} origin={settings.origin?.code} depDate={settings.depDate} />
+            }
+          </>
+        ) : (
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 16, padding: '80px 0',
+          }}>
+            <div style={{
+              fontSize: 11, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: 'var(--text-dim-2)', fontFamily: 'JetBrains Mono, monospace',
+            }}>Work in Progress</div>
+            <div style={{ fontSize: 36, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>
+              {mode === 'custom' ? 'Custom Search' : 'Agentic Mode'}
+            </div>
+            <div style={{ fontSize: 14, color: 'var(--text-dim)', maxWidth: 340, textAlign: 'center', lineHeight: 1.6 }}>
+              {mode === 'custom'
+                ? 'Build your own search with custom filters and rules. Coming soon.'
+                : 'An AI agent that plans and books your trip end-to-end. Coming soon.'}
+            </div>
+          </div>
+        )}
       </main>
 
       {toast    && <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />}

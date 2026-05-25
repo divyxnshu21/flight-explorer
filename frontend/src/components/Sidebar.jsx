@@ -33,7 +33,7 @@ const DATE_PRESETS = [
 const S = {
   sidebar: {
     width: 280, minWidth: 280,
-    background: 'linear-gradient(180deg, rgba(17,24,39,0.85), rgba(14,21,37,0.85))',
+    background: 'var(--surface-sidebar)',
     backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
     borderRight: '1px solid var(--border)',
     padding: '20px 18px 24px',
@@ -53,19 +53,21 @@ const S = {
     boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 6px 16px -8px rgba(99,102,241,0.7)',
   },
   logoImage: {
-    width: 162,
-    height: 42,
+    width: '100%',
+    height: 90,
     objectFit: 'contain',
     objectPosition: 'left center',
     display: 'block',
+    filter: 'var(--logo-filter)',
   },
   collapsedLogoImage: {
-    width: 36,
-    height: 36,
+    width: 46,
+    height: 46,
     objectFit: 'cover',
     objectPosition: 'left center',
     borderRadius: 8,
     display: 'block',
+    filter: 'var(--logo-filter)',
   },
   apiPill: {
     display: 'flex', alignItems: 'center', gap: 6,
@@ -80,7 +82,7 @@ const S = {
     paddingLeft: 8, borderLeft: '2px solid var(--accent)',
   },
   field: {
-    background: 'rgba(255,255,255,0.025)', border: '1px solid var(--border)', borderRadius: 10,
+    background: 'var(--surface-field)', border: '1px solid var(--border)', borderRadius: 10,
     padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10,
   },
   fieldLabel: { fontSize: 10, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 },
@@ -105,7 +107,7 @@ const S = {
   shortcutRow: { display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-dim)' },
   kbd: {
     fontFamily: 'JetBrains Mono, monospace',
-    background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)',
+    background: 'var(--kbd-bg)', border: '1px solid var(--border)',
     borderRadius: 5, padding: '1px 6px', fontSize: 10.5, color: 'var(--text)',
   },
   counter: {
@@ -169,14 +171,14 @@ export default function Sidebar({ settings, setSettings, apiStatus, collapsed, o
   if (collapsed) {
     return (
       <aside style={{
-        width: 52, minWidth: 52, background: 'linear-gradient(180deg, rgba(17,24,39,0.85), rgba(14,21,37,0.85))',
+        width: 52, minWidth: 52, background: 'var(--surface-sidebar)',
         backdropFilter: 'blur(20px)', borderRight: '1px solid var(--border)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 0', gap: 20,
         height: '100vh', position: 'sticky', top: 0, transition: 'width 200ms ease',
       }}>
         <img src="/logo.png" alt="AeroScan" title="AeroScan" style={S.collapsedLogoImage} />
         <button onClick={onToggleCollapse} title="Expand sidebar (⌘\)"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: 'var(--text-dim)', display: 'grid', placeItems: 'center' }}>
+          style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: 'var(--text-dim)', display: 'grid', placeItems: 'center' }}>
           ›
         </button>
       </aside>
@@ -196,7 +198,7 @@ export default function Sidebar({ settings, setSettings, apiStatus, collapsed, o
             {apiStatus ? 'LIVE' : 'OFFLINE'}
           </div>
           <button onClick={onToggleCollapse} title="Collapse sidebar (⌘\)"
-            style={{ background: 'transparent', border: '1px solid var(--border)', borderRadius: 7, width: 26, height: 26, cursor: 'pointer', color: 'var(--text-dim-2)', display: 'grid', placeItems: 'center', fontSize: 14, flexShrink: 0 }}>
+            style={{ background: 'var(--surface-pill)', border: '1px solid var(--border)', borderRadius: 7, width: 26, height: 26, cursor: 'pointer', color: 'var(--text-dim-2)', display: 'grid', placeItems: 'center', fontSize: 14, flexShrink: 0 }}>
             ‹
           </button>
         </div>
@@ -275,7 +277,7 @@ export default function Sidebar({ settings, setSettings, apiStatus, collapsed, o
               onClick={() => { set('depDate', p.dep()); set('retDate', p.ret()); }}
               style={{
                 fontSize: 10.5, fontWeight: 500, padding: '4px 9px', borderRadius: 999,
-                border: '1px solid var(--border)', background: 'rgba(255,255,255,0.03)',
+                border: '1px solid var(--border)', background: 'var(--surface-pill)',
                 color: 'var(--text-dim)', cursor: 'pointer', fontFamily: 'inherit',
                 transition: 'all 120ms ease',
               }}

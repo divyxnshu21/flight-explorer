@@ -7,14 +7,14 @@ import BarChart from './BarChart.jsx';
 function Metric({ label, value, sub, icon, glow, accent }) {
   return (
     <div style={{
-      background: glow ? 'linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.01))' : 'linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0))',
+      background: glow ? 'linear-gradient(180deg, rgba(16,185,129,0.08), rgba(16,185,129,0.01))' : 'var(--surface-field)',
       border: glow ? '1px solid rgba(16,185,129,0.18)' : '1px solid var(--border)',
       boxShadow: glow ? '0 0 0 1px rgba(16,185,129,0.18) inset, 0 18px 60px -28px rgba(16,185,129,0.55)' : 'none',
       borderRadius: 14, padding: '16px 18px', position: 'relative', overflow: 'hidden',
     }}>
       <div style={{
         position: 'absolute', top: 14, right: 14, width: 28, height: 28, borderRadius: 8,
-        background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)',
+        background: 'var(--surface-raised)', border: '1px solid var(--border)',
         display: 'grid', placeItems: 'center',
       }}>{icon}</div>
       <div style={{ fontSize: 10.5, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>{label}</div>
@@ -42,7 +42,7 @@ function MaxPriceSlider({ min, max, value, onChange, formatLabel }) {
         <span style={{ color: 'var(--text-dim-2)' }}>Min {formatLabel(min)}</span>
         <span style={{ color: 'var(--text)', fontWeight: 600 }}>Max {formatLabel(value)}</span>
       </div>
-      <div style={{ position: 'relative', height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 4, margin: '8px 0' }}>
+      <div style={{ position: 'relative', height: 4, background: 'var(--track-bg)', borderRadius: 4, margin: '8px 0' }}>
         <div style={{
           position: 'absolute', height: '100%', borderRadius: 4, left: 0, width: `${pct}%`,
           background: 'linear-gradient(90deg, #2563EB, #6366F1)',
@@ -75,7 +75,7 @@ function AirlineFilter({ airlines, selected, onToggle, onClear }) {
         style={{
           display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 500,
           color: selectedCount > 0 ? '#60a5fa' : 'var(--text-dim)',
-          background: selectedCount > 0 ? 'rgba(37,99,235,0.1)' : 'rgba(255,255,255,0.03)',
+          background: selectedCount > 0 ? 'rgba(37,99,235,0.1)' : 'var(--surface-pill)',
           border: selectedCount > 0 ? '1px solid rgba(37,99,235,0.4)' : '1px solid var(--border)',
           borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit',
         }}>
@@ -84,9 +84,9 @@ function AirlineFilter({ airlines, selected, onToggle, onClear }) {
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 50,
-          background: '#0f1828', border: '1px solid var(--border-strong)',
+          background: 'var(--surface-dropdown)', border: '1px solid var(--border-strong)',
           borderRadius: 10, padding: 8, minWidth: 180,
-          boxShadow: '0 12px 40px -8px rgba(0,0,0,0.6)',
+          boxShadow: '0 12px 40px -8px rgba(0,0,0,0.3)',
         }}>
           {selectedCount > 0 && (
             <button onClick={onClear}
@@ -96,7 +96,7 @@ function AirlineFilter({ airlines, selected, onToggle, onClear }) {
           )}
           {airlines.map(a => (
             <label key={a} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: 'var(--text)' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-raised)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               <input type="checkbox" checked={selected.has(a)} onChange={() => onToggle(a)} style={{ accentColor: 'var(--accent)' }} />
               {a}
@@ -195,7 +195,7 @@ export default function ResultsPanel({ results, origin, depDate }) {
 
       {/* Max price filter */}
       {globalMax > globalMin && (
-        <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', background: 'rgba(255,255,255,0.01)' }}>
+        <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', background: 'var(--surface-card)' }}>
           <div style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-dim)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             Max price
           </div>
@@ -231,7 +231,7 @@ export default function ResultsPanel({ results, origin, depDate }) {
             <FilterIcon size={12} />
             <select value={sortIdx} onChange={e => setSortIdx(Number(e.target.value))}
               style={{ background: 'transparent', border: 'none', color: 'var(--text)', fontSize: 11.5, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
-              {SORT_OPTIONS.map((o, i) => <option key={i} value={i} style={{ background: '#111827' }}>{o.label}</option>)}
+              {SORT_OPTIONS.map((o, i) => <option key={i} value={i} style={{ background: 'var(--surface)' }}>{o.label}</option>)}
             </select>
           </div>
 
@@ -242,7 +242,7 @@ export default function ResultsPanel({ results, origin, depDate }) {
                 title={mode === 'grid' ? 'Grid view' : 'List view'}
                 style={{
                   padding: '5px 10px', fontSize: 13, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                  background: viewMode === mode ? 'rgba(37,99,235,0.2)' : 'rgba(255,255,255,0.03)',
+                  background: viewMode === mode ? 'rgba(37,99,235,0.2)' : 'var(--surface-pill)',
                   color: viewMode === mode ? '#60a5fa' : 'var(--text-dim)',
                   borderRight: mode === 'grid' ? '1px solid var(--border)' : 'none',
                 }}>
@@ -253,7 +253,7 @@ export default function ResultsPanel({ results, origin, depDate }) {
 
           <button onClick={() => csvDownload(filtered)} style={{
             display: 'flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 500,
-            color: 'var(--text-dim)', background: 'rgba(255,255,255,0.03)',
+            color: 'var(--text-dim)', background: 'var(--surface-pill)',
             border: '1px solid var(--border)', borderRadius: 7, padding: '5px 10px',
             cursor: 'pointer', fontFamily: 'inherit',
           }}>

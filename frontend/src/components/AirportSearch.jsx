@@ -66,7 +66,7 @@ export default function AirportSearch({ value, onChange, placeholder = 'Search a
     <div style={{ position: 'relative' }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8,
-        background: 'rgba(255,255,255,0.025)',
+        background: 'var(--surface-field)',
         border: '1px solid var(--border)',
         borderRadius: 10,
         padding: '9px 12px',
@@ -93,11 +93,11 @@ export default function AirportSearch({ value, onChange, placeholder = 'Search a
       {open && (
         <div ref={listRef} style={{
           position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 999,
-          background: '#0f1828',
+          background: 'var(--surface-dropdown)',
           border: '1px solid var(--border-strong)',
           borderRadius: 10,
           overflow: 'hidden',
-          boxShadow: '0 16px 40px -8px rgba(0,0,0,0.6)',
+          boxShadow: '0 16px 40px -8px rgba(0,0,0,0.3)',
           maxHeight: 280,
           overflowY: 'auto',
         }}>

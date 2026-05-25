@@ -6,7 +6,7 @@ export default function RecentSearches({ searches, onRestore, onClear }) {
   return (
     <div style={{
       border: '1px solid var(--border)', borderRadius: 12,
-      background: 'rgba(255,255,255,0.012)',
+      background: 'var(--surface-card)',
       overflow: 'hidden',
     }}>
       <div style={{
@@ -32,7 +32,7 @@ export default function RecentSearches({ searches, onRestore, onClear }) {
               cursor: 'pointer', transition: 'background 100ms ease',
             }}
             onClick={() => onRestore(s)}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.025)'}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-field)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
             <PlaneTiltIcon size={13} stroke="var(--text-dim-2)" />

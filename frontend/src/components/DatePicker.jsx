@@ -74,7 +74,7 @@ export default function DatePicker({ value, onChange, min, autoOpenSignal = 0, a
 
   const navBtn = {
     width: 24, height: 24, borderRadius: 6,
-    border: '1px solid var(--border)', background: 'rgba(255,255,255,0.05)',
+    border: '1px solid var(--border)', background: 'var(--surface-hover)',
     color: 'var(--text-dim)', cursor: 'pointer', fontSize: 14,
     display: 'grid', placeItems: 'center', fontFamily: 'inherit', flexShrink: 0,
   };
@@ -120,7 +120,7 @@ export default function DatePicker({ value, onChange, min, autoOpenSignal = 0, a
       {open && (
         <div style={{
           marginTop: 8,
-          background: '#0d1523',
+          background: 'var(--surface-dropdown)',
           border: '1px solid var(--border-strong)',
           borderRadius: 12, overflow: 'hidden',
           boxShadow: '0 12px 40px -12px rgba(0,0,0,0.7)',
@@ -130,7 +130,7 @@ export default function DatePicker({ value, onChange, min, autoOpenSignal = 0, a
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '10px 12px', borderBottom: '1px solid var(--border)',
-            background: 'rgba(255,255,255,0.02)',
+            background: 'var(--surface-field)',
           }}>
             {/* Prev */}
             <button style={navBtn} onClick={() => {
@@ -143,7 +143,7 @@ export default function DatePicker({ value, onChange, min, autoOpenSignal = 0, a
             <button
               onClick={() => setMode(m => m === 'day' ? 'month' : m === 'month' ? 'year' : 'year')}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '2px 6px', borderRadius: 6 }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-hover-2)'}
               onMouseLeave={e => e.currentTarget.style.background = 'none'}>
               <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)' }}>
                 {mode === 'day'   && `${MONTHS_LONG[viewMonth]} ${viewYear}`}
@@ -183,7 +183,7 @@ export default function DatePicker({ value, onChange, min, autoOpenSignal = 0, a
                       key={day}
                       disabled={isOff}
                       onClick={() => pick(day)}
-                      onMouseEnter={e => { if (!isOff && !isSel) e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+                      onMouseEnter={e => { if (!isOff && !isSel) e.currentTarget.style.background = 'var(--surface-hover-2)'; }}
                       onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
                       style={{
                         ...btnStyle(isSel),
@@ -210,7 +210,7 @@ export default function DatePicker({ value, onChange, min, autoOpenSignal = 0, a
                   <button
                     key={m}
                     onClick={() => pickMonth(i)}
-                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--surface-hover-2)'; }}
                     onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
                     style={{ ...btnStyle(isActive), padding: '9px 0', borderRadius: 8 }}>
                     {m}
@@ -231,7 +231,7 @@ export default function DatePicker({ value, onChange, min, autoOpenSignal = 0, a
                   <button
                     key={y}
                     onClick={() => pickYear(y)}
-                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--surface-hover-2)'; }}
                     onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
                     style={{
                       ...btnStyle(isActive),

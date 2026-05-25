@@ -58,7 +58,7 @@ export default function SearchBar({ onSearch, onVoiceResult, loading }) {
       transition: 'box-shadow 200ms ease',
     }}>
       <div style={{
-        background: '#0c1322', borderRadius: 14.5, padding: '14px 18px',
+        background: 'var(--surface-search)', borderRadius: 14.5, padding: '14px 18px',
         display: 'flex', alignItems: 'center', gap: 14,
       }}>
         {loading
@@ -99,7 +99,7 @@ export default function SearchBar({ onSearch, onVoiceResult, loading }) {
           style={{
             width: 36, height: 36, borderRadius: 10,
             border: listening ? '1px solid rgba(239,68,68,0.5)' : '1px solid var(--border)',
-            background: listening ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.03)',
+            background: listening ? 'rgba(239,68,68,0.15)' : 'var(--surface-pill)',
             color: listening ? '#f87171' : 'var(--text-dim)',
             display: 'grid', placeItems: 'center', cursor: 'pointer',
             animation: listening ? 'blink 1s ease-in-out infinite' : 'none',
