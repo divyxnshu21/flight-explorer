@@ -347,8 +347,10 @@ export default function App() {
               onClear={() => setRecent([])}
             />
 
-            {/* Destination browser */}
-            <DestinationBrowser selected={selected} onToggle={toggleDest} onSetMany={setSelected} />
+            {/* Destination browser — Custom mode only */}
+            {mode === 'custom' && (
+              <DestinationBrowser selected={selected} onToggle={toggleDest} onSetMany={setSelected} />
+            )}
 
             {/* Query bar */}
             <QueryBar selected={selected} onRemove={removeDest} onClear={() => setSelected(new Set())} onAdd={addDest} />
