@@ -1,30 +1,30 @@
 export const REGIONS = [
-  { id: 'domestic', flag: '🇮🇳', name: 'India' },
-  { id: 'seasia',   flag: '🌏',  name: 'SE Asia' },
-  { id: 'me',       flag: '🌙',  name: 'Middle East' },
-  { id: 'europe',   flag: '🇪🇺', name: 'Europe' },
-  { id: 'eastasia', flag: '🎌',  name: 'East Asia' },
-  { id: 'southasia',flag: '🏝️', name: 'South Asia' },
-  { id: 'americas', flag: '🌎',  name: 'Americas' },
-  { id: 'oceania',  flag: '🦘',  name: 'Oceania' },
+  { id: 'seasia',    flag: '🌏',   cc: null, name: 'SE Asia' },
+  { id: 'me',        flag: '🌙',   cc: null, name: 'Middle East' },
+  { id: 'europe',    flag: '🇪🇺', cc: 'eu', name: 'Europe' },
+  { id: 'eastasia',  flag: '🎌',   cc: null, name: 'East Asia' },
+  { id: 'southasia', flag: '🏝️',  cc: null, name: 'South Asia' },
+  { id: 'americas',  flag: '🌎',   cc: null, name: 'Americas' },
+  { id: 'oceania',   flag: '🦘',   cc: null, name: 'Oceania' },
+  { id: 'domestic',  flag: '🇮🇳', cc: 'in', name: 'India' },
 ];
 
 // Region → Country → Cities (the source of truth)
 export const COUNTRIES = {
   domestic: [
-    { name: 'North India', flag: '🏔️', cities: [
+    { name: 'North India', flag: '🏔️', cc: 'in', cities: [
       { code: 'DEL', city: 'Delhi' },
       { code: 'JAI', city: 'Jaipur' },
       { code: 'AMD', city: 'Ahmedabad' },
       { code: 'LKO', city: 'Lucknow' },
     ]},
-    { name: 'South India', flag: '🌴', cities: [
+    { name: 'South India', flag: '🌴', cc: 'in', cities: [
       { code: 'BLR', city: 'Bengaluru' },
       { code: 'MAA', city: 'Chennai' },
       { code: 'HYD', city: 'Hyderabad' },
       { code: 'COK', city: 'Kochi' },
     ]},
-    { name: 'West & East', flag: '🏙️', cities: [
+    { name: 'West & East', flag: '🏙️', cc: 'in', cities: [
       { code: 'BOM', city: 'Mumbai' },
       { code: 'GOI', city: 'Goa' },
       { code: 'CCU', city: 'Kolkata' },
@@ -32,101 +32,101 @@ export const COUNTRIES = {
     ]},
   ],
   seasia: [
-    { name: 'Thailand', flag: '🇹🇭', cities: [
+    { name: 'Thailand', flag: '🇹🇭', cc: 'th', cities: [
       { code: 'BKK', city: 'Bangkok' },
       { code: 'HKT', city: 'Phuket' },
       { code: 'CNX', city: 'Chiang Mai' },
       { code: 'USM', city: 'Koh Samui' },
       { code: 'KBV', city: 'Krabi' },
     ]},
-    { name: 'Vietnam', flag: '🇻🇳', cities: [
+    { name: 'Vietnam', flag: '🇻🇳', cc: 'vn', cities: [
       { code: 'SGN', city: 'Ho Chi Minh' },
       { code: 'HAN', city: 'Hanoi' },
       { code: 'DAD', city: 'Da Nang' },
       { code: 'CXR', city: 'Nha Trang' },
       { code: 'PQC', city: 'Phu Quoc' },
     ]},
-    { name: 'Singapore', flag: '🇸🇬', cities: [
+    { name: 'Singapore', flag: '🇸🇬', cc: 'sg', cities: [
       { code: 'SIN', city: 'Singapore' },
     ]},
-    { name: 'Malaysia', flag: '🇲🇾', cities: [
+    { name: 'Malaysia', flag: '🇲🇾', cc: 'my', cities: [
       { code: 'KUL', city: 'Kuala Lumpur' },
       { code: 'PEN', city: 'Penang' },
     ]},
-    { name: 'Indonesia', flag: '🇮🇩', cities: [
+    { name: 'Indonesia', flag: '🇮🇩', cc: 'id', cities: [
       { code: 'DPS', city: 'Bali' },
       { code: 'CGK', city: 'Jakarta' },
       { code: 'LOP', city: 'Lombok' },
     ]},
-    { name: 'Philippines', flag: '🇵🇭', cities: [
+    { name: 'Philippines', flag: '🇵🇭', cc: 'ph', cities: [
       { code: 'MNL', city: 'Manila' },
       { code: 'CEB', city: 'Cebu' },
       { code: 'BCD', city: 'Boracay' },
     ]},
-    { name: 'Cambodia', flag: '🇰🇭', cities: [
+    { name: 'Cambodia', flag: '🇰🇭', cc: 'kh', cities: [
       { code: 'PNH', city: 'Phnom Penh' },
       { code: 'REP', city: 'Siem Reap' },
     ]},
   ],
   me: [
-    { name: 'UAE', flag: '🇦🇪', cities: [
+    { name: 'UAE', flag: '🇦🇪', cc: 'ae', cities: [
       { code: 'DXB', city: 'Dubai' },
       { code: 'AUH', city: 'Abu Dhabi' },
       { code: 'SHJ', city: 'Sharjah' },
     ]},
-    { name: 'Qatar', flag: '🇶🇦', cities: [
+    { name: 'Qatar', flag: '🇶🇦', cc: 'qa', cities: [
       { code: 'DOH', city: 'Doha' },
     ]},
-    { name: 'Oman', flag: '🇴🇲', cities: [
+    { name: 'Oman', flag: '🇴🇲', cc: 'om', cities: [
       { code: 'MCT', city: 'Muscat' },
     ]},
-    { name: 'Saudi Arabia', flag: '🇸🇦', cities: [
+    { name: 'Saudi Arabia', flag: '🇸🇦', cc: 'sa', cities: [
       { code: 'JED', city: 'Jeddah' },
       { code: 'RUH', city: 'Riyadh' },
     ]},
-    { name: 'Kuwait', flag: '🇰🇼', cities: [
+    { name: 'Kuwait', flag: '🇰🇼', cc: 'kw', cities: [
       { code: 'KWI', city: 'Kuwait City' },
     ]},
-    { name: 'Bahrain', flag: '🇧🇭', cities: [
+    { name: 'Bahrain', flag: '🇧🇭', cc: 'bh', cities: [
       { code: 'BAH', city: 'Manama' },
     ]},
   ],
   europe: [
-    { name: 'UK', flag: '🇬🇧', cities: [
+    { name: 'UK', flag: '🇬🇧', cc: 'gb', cities: [
       { code: 'LHR', city: 'London' },
       { code: 'MAN', city: 'Manchester' },
       { code: 'BHX', city: 'Birmingham' },
     ]},
-    { name: 'France', flag: '🇫🇷', cities: [
+    { name: 'France', flag: '🇫🇷', cc: 'fr', cities: [
       { code: 'CDG', city: 'Paris' },
       { code: 'NCE', city: 'Nice' },
     ]},
-    { name: 'Italy', flag: '🇮🇹', cities: [
+    { name: 'Italy', flag: '🇮🇹', cc: 'it', cities: [
       { code: 'FCO', city: 'Rome' },
       { code: 'MXP', city: 'Milan' },
       { code: 'VCE', city: 'Venice' },
     ]},
-    { name: 'Switzerland', flag: '🇨🇭', cities: [
+    { name: 'Switzerland', flag: '🇨🇭', cc: 'ch', cities: [
       { code: 'ZRH', city: 'Zurich' },
       { code: 'GVA', city: 'Geneva' },
     ]},
-    { name: 'Germany', flag: '🇩🇪', cities: [
+    { name: 'Germany', flag: '🇩🇪', cc: 'de', cities: [
       { code: 'FRA', city: 'Frankfurt' },
       { code: 'MUC', city: 'Munich' },
     ]},
-    { name: 'Spain', flag: '🇪🇸', cities: [
+    { name: 'Spain', flag: '🇪🇸', cc: 'es', cities: [
       { code: 'BCN', city: 'Barcelona' },
       { code: 'MAD', city: 'Madrid' },
     ]},
-    { name: 'Netherlands', flag: '🇳🇱', cities: [
+    { name: 'Netherlands', flag: '🇳🇱', cc: 'nl', cities: [
       { code: 'AMS', city: 'Amsterdam' },
     ]},
-    { name: 'Turkey', flag: '🇹🇷', cities: [
+    { name: 'Turkey', flag: '🇹🇷', cc: 'tr', cities: [
       { code: 'IST', city: 'Istanbul' },
     ]},
   ],
   eastasia: [
-    { name: 'Japan', flag: '🇯🇵', cities: [
+    { name: 'Japan', flag: '🇯🇵', cc: 'jp', cities: [
       { code: 'NRT', city: 'Tokyo' },
       { code: 'HND', city: 'Tokyo Haneda' },
       { code: 'KIX', city: 'Osaka' },
@@ -134,37 +134,37 @@ export const COUNTRIES = {
       { code: 'FUK', city: 'Fukuoka' },
       { code: 'OKA', city: 'Okinawa' },
     ]},
-    { name: 'South Korea', flag: '🇰🇷', cities: [
+    { name: 'South Korea', flag: '🇰🇷', cc: 'kr', cities: [
       { code: 'ICN', city: 'Seoul' },
       { code: 'PUS', city: 'Busan' },
     ]},
-    { name: 'Hong Kong', flag: '🇭🇰', cities: [
+    { name: 'Hong Kong', flag: '🇭🇰', cc: 'hk', cities: [
       { code: 'HKG', city: 'Hong Kong' },
     ]},
-    { name: 'China', flag: '🇨🇳', cities: [
+    { name: 'China', flag: '🇨🇳', cc: 'cn', cities: [
       { code: 'PVG', city: 'Shanghai' },
       { code: 'PEK', city: 'Beijing' },
     ]},
   ],
   southasia: [
-    { name: 'Maldives', flag: '🇲🇻', cities: [
+    { name: 'Maldives', flag: '🇲🇻', cc: 'mv', cities: [
       { code: 'MLE', city: 'Malé' },
     ]},
-    { name: 'Sri Lanka', flag: '🇱🇰', cities: [
+    { name: 'Sri Lanka', flag: '🇱🇰', cc: 'lk', cities: [
       { code: 'CMB', city: 'Colombo' },
     ]},
-    { name: 'Nepal', flag: '🇳🇵', cities: [
+    { name: 'Nepal', flag: '🇳🇵', cc: 'np', cities: [
       { code: 'KTM', city: 'Kathmandu' },
     ]},
-    { name: 'Bangladesh', flag: '🇧🇩', cities: [
+    { name: 'Bangladesh', flag: '🇧🇩', cc: 'bd', cities: [
       { code: 'DAC', city: 'Dhaka' },
     ]},
-    { name: 'Myanmar', flag: '🇲🇲', cities: [
+    { name: 'Myanmar', flag: '🇲🇲', cc: 'mm', cities: [
       { code: 'RGN', city: 'Yangon' },
     ]},
   ],
   americas: [
-    { name: 'USA', flag: '🇺🇸', cities: [
+    { name: 'USA', flag: '🇺🇸', cc: 'us', cities: [
       { code: 'JFK', city: 'New York' },
       { code: 'EWR', city: 'Newark' },
       { code: 'LAX', city: 'Los Angeles' },
@@ -172,13 +172,13 @@ export const COUNTRIES = {
       { code: 'ORD', city: 'Chicago' },
       { code: 'IAD', city: 'Washington DC' },
     ]},
-    { name: 'Canada', flag: '🇨🇦', cities: [
+    { name: 'Canada', flag: '🇨🇦', cc: 'ca', cities: [
       { code: 'YYZ', city: 'Toronto' },
       { code: 'YVR', city: 'Vancouver' },
     ]},
   ],
   oceania: [
-    { name: 'Australia', flag: '🇦🇺', cities: [
+    { name: 'Australia', flag: '🇦🇺', cc: 'au', cities: [
       { code: 'SYD', city: 'Sydney' },
       { code: 'MEL', city: 'Melbourne' },
       { code: 'BNE', city: 'Brisbane' },
@@ -186,7 +186,7 @@ export const COUNTRIES = {
       { code: 'ADL', city: 'Adelaide' },
       { code: 'OOL', city: 'Gold Coast' },
     ]},
-    { name: 'New Zealand', flag: '🇳🇿', cities: [
+    { name: 'New Zealand', flag: '🇳🇿', cc: 'nz', cities: [
       { code: 'AKL', city: 'Auckland' },
       { code: 'CHC', city: 'Christchurch' },
     ]},

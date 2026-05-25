@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { PinIcon, CalendarIcon, UsersIcon, DotIcon, ChevronDown } from './Icons.jsx';
 import AirportSearch from './AirportSearch.jsx';
 import DatePicker from './DatePicker.jsx';
+import Logo from './Logo.jsx';
 
 function addDays(n) {
   const d = new Date();
@@ -51,23 +52,6 @@ const S = {
     background: 'linear-gradient(135deg, #2563EB, #6366F1)',
     display: 'grid', placeItems: 'center',
     boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 6px 16px -8px rgba(99,102,241,0.7)',
-  },
-  logoImage: {
-    width: '100%',
-    height: 90,
-    objectFit: 'contain',
-    objectPosition: 'left center',
-    display: 'block',
-    filter: 'var(--logo-filter)',
-  },
-  collapsedLogoImage: {
-    width: 46,
-    height: 46,
-    objectFit: 'cover',
-    objectPosition: 'left center',
-    borderRadius: 8,
-    display: 'block',
-    filter: 'var(--logo-filter)',
   },
   apiPill: {
     display: 'flex', alignItems: 'center', gap: 6,
@@ -176,7 +160,7 @@ export default function Sidebar({ settings, setSettings, apiStatus, collapsed, o
         display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 0', gap: 20,
         height: '100vh', position: 'sticky', top: 0, transition: 'width 200ms ease',
       }}>
-        <img src="/logo.png" alt="AeroScan" title="AeroScan" style={S.collapsedLogoImage} />
+        <Logo collapsed />
         <button onClick={onToggleCollapse} title="Expand sidebar (⌘\)"
           style={{ background: 'var(--surface-hover)', border: '1px solid var(--border)', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', color: 'var(--text-dim)', display: 'grid', placeItems: 'center' }}>
           ›
@@ -190,7 +174,7 @@ export default function Sidebar({ settings, setSettings, apiStatus, collapsed, o
       {/* Logo */}
       <div style={S.logoRow}>
         <div style={S.logo}>
-          <img src="/logo.png" alt="AeroScan" style={S.logoImage} />
+          <Logo />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={S.apiPill}>
@@ -281,7 +265,7 @@ export default function Sidebar({ settings, setSettings, apiStatus, collapsed, o
                 color: 'var(--text-dim)', cursor: 'pointer', fontFamily: 'inherit',
                 transition: 'all 120ms ease',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(37,99,235,0.4)'; e.currentTarget.style.color = '#60a5fa'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(37,99,235,0.4)'; e.currentTarget.style.color = 'var(--accent)'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-dim)'; }}
             >{p.label}</button>
           ))}

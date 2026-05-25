@@ -48,7 +48,7 @@ export default function DestinationBrowser({ selected, onToggle, onSetMany }) {
             onClick={toggleRegion}
             style={{
               fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-              color: allSelected ? '#f87171' : '#60a5fa',
+              color: allSelected ? '#f87171' : 'var(--accent)',
               background: 'none', border: 'none', padding: 0,
               textDecoration: 'underline', textUnderlineOffset: 3,
             }}>
@@ -83,7 +83,7 @@ export default function DestinationBrowser({ selected, onToggle, onSetMany }) {
                 position: 'relative',
               }}>
               {r.cc
-                ? <span className={`fi fi-${r.cc}`} style={{ width: 20, height: 14, borderRadius: 2, display: 'inline-block', backgroundSize: 'cover', flexShrink: 0 }} />
+                ? <span className={`fi fi-${r.cc}`} style={{ width: 20, height: 14, borderRadius: 2, display: 'inline-block', backgroundSize: 'cover', flexShrink: 0, border: '1px solid var(--border)' }} />
                 : <span>{r.flag}</span>
               }
               <span>{r.name}</span>

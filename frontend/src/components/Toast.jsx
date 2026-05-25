@@ -9,8 +9,8 @@ export default function Toast({ message, type = 'error', onDismiss }) {
 
   const colors = {
     error:   { bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.28)', text: '#f87171', dot: '#ef4444' },
-    warning: { bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.3)',  text: '#fbbf24', dot: '#f59e0b' },
-    success: { bg: 'rgba(16,185,129,0.10)', border: 'rgba(16,185,129,0.3)',  text: '#34d399', dot: '#10b981' },
+    warning: { bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.3)',  text: 'var(--warn)', dot: '#f59e0b' },
+    success: { bg: 'rgba(16,185,129,0.10)', border: 'rgba(16,185,129,0.3)',  text: 'var(--success)', dot: '#10b981' },
   };
   const c = colors[type] || colors.error;
 

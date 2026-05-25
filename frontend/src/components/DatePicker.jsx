@@ -189,7 +189,7 @@ export default function DatePicker({ value, onChange, min, autoOpenSignal = 0, a
                         ...btnStyle(isSel),
                         height: 30,
                         cursor: isOff ? 'default' : 'pointer',
-                        color: isOff ? 'var(--text-dim-2)' : isSel ? '#fff' : isTod ? '#60a5fa' : 'var(--text)',
+                        color: isOff ? 'var(--text-dim-2)' : isSel ? '#fff' : isTod ? 'var(--accent)' : 'var(--text)',
                         boxShadow: isTod && !isSel ? 'inset 0 0 0 1px rgba(37,99,235,0.5)' : 'none',
                         opacity: isOff ? 0.3 : 1,
                       }}>
@@ -236,7 +236,7 @@ export default function DatePicker({ value, onChange, min, autoOpenSignal = 0, a
                     style={{
                       ...btnStyle(isActive),
                       padding: '8px 0', borderRadius: 8,
-                      color: isActive ? '#fff' : isTodY ? '#60a5fa' : 'var(--text)',
+                      color: isActive ? '#fff' : isTodY ? 'var(--accent)' : 'var(--text)',
                       boxShadow: isTodY && !isActive ? 'inset 0 0 0 1px rgba(37,99,235,0.45)' : 'none',
                     }}>
                     {y}
@@ -264,7 +264,7 @@ export default function DatePicker({ value, onChange, min, autoOpenSignal = 0, a
                   background: 'none', border: 'none', cursor: 'pointer',
                   fontFamily: 'inherit', padding: 0,
                 }}
-                onMouseEnter={e => e.currentTarget.style.color = '#60a5fa'}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'}
                 onMouseLeave={e => e.currentTarget.style.color = 'var(--text-dim)'}>
                 Today →
               </button>

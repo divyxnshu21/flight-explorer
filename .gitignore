@@ -22,3 +22,5 @@ dist/
 
 # Streamlit leftovers
 streamlit_out.txt
+
+.vercel

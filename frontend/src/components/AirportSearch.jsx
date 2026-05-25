@@ -118,7 +118,7 @@ export default function AirportSearch({ value, onChange, placeholder = 'Search a
               <span style={{ fontSize: 18 }}>{apt.flag || '✈️'}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                  <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: i === activeIdx ? '#60a5fa' : 'var(--text)' }}>{apt.code}</span>
+                  <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: i === activeIdx ? 'var(--accent)' : 'var(--text)' }}>{apt.code}</span>
                   <span style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500 }}>{apt.city}</span>
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

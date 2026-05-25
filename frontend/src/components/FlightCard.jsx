@@ -1,8 +1,8 @@
 import { PlaneTiltIcon, ClockIcon } from './Icons.jsx';
 import { formatINR } from '../lib/utils.js';
 
-const PILL_INCLUDED = { border: '1px solid rgba(16,185,129,0.25)', background: 'rgba(16,185,129,0.07)', color: '#34d399' };
-const PILL_FEE      = { border: '1px solid rgba(245,158,11,0.28)',  background: 'rgba(245,158,11,0.07)',  color: '#fcd34d' };
+const PILL_INCLUDED = { border: '1px solid rgba(16,185,129,0.25)', background: 'rgba(16,185,129,0.07)', color: 'var(--success)' };
+const PILL_FEE      = { border: '1px solid rgba(245,158,11,0.28)',  background: 'rgba(245,158,11,0.07)',  color: 'var(--warn)' };
 const PILL_UNKNOWN  = { border: '1px solid var(--border)',           background: 'var(--surface-pill)', color: 'var(--text-dim-2)' };
 
 function baggagePillStyle(info) {
@@ -90,7 +90,7 @@ export function FlightCardGrid({ flight, origin, depDate }) {
           <div style={{ fontSize: 12, color: 'var(--text)', marginTop: 4, fontWeight: 500 }}>{flight.airline}</div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div className="tabnum" style={{ fontSize: 26, fontWeight: 700, color: '#10B981', letterSpacing: '-0.02em', lineHeight: 1 }}>
+          <div className="tabnum" style={{ fontSize: 26, fontWeight: 700, color: 'var(--success)', letterSpacing: '-0.02em', lineHeight: 1 }}>
             ₹{formatINR(flight.price)}
           </div>
           <div style={{ fontSize: 10.5, color: 'var(--text-dim)', marginTop: 4 }}>per adult</div>
@@ -134,7 +134,7 @@ export function FlightCardGrid({ flight, origin, depDate }) {
           border: '1px solid var(--border)', textDecoration: 'none',
           transition: 'all 140ms ease',
         }}
-        onMouseEnter={e => { e.currentTarget.style.color = '#60a5fa'; e.currentTarget.style.borderColor = 'rgba(37,99,235,0.4)'; e.currentTarget.style.background = 'rgba(37,99,235,0.06)'; }}
+        onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.borderColor = 'rgba(37,99,235,0.4)'; e.currentTarget.style.background = 'rgba(37,99,235,0.06)'; }}
         onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--surface-pill)'; }}>
         View on Google Flights ↗
       </a>
@@ -215,9 +215,9 @@ export function FlightCardList({ flight, origin, depDate }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginLeft: 'auto' }}>
         <div style={{ textAlign: 'right' }}>
           {flight.type === 'Best' && (
-            <div style={{ fontSize: 9, fontWeight: 700, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>Best Deal</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 2 }}>Best Deal</div>
           )}
-          <div className="tabnum" style={{ fontSize: 22, fontWeight: 700, color: '#10B981', letterSpacing: '-0.02em', lineHeight: 1 }}>
+          <div className="tabnum" style={{ fontSize: 22, fontWeight: 700, color: 'var(--success)', letterSpacing: '-0.02em', lineHeight: 1 }}>
             ₹{formatINR(flight.price)}
           </div>
           <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>per adult</div>
@@ -225,7 +225,7 @@ export function FlightCardList({ flight, origin, depDate }) {
         <a href={googleFlightsUrl(flight, origin, depDate)} target="_blank" rel="noopener noreferrer"
           style={{
             padding: '8px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-            color: '#60a5fa', background: 'rgba(37,99,235,0.08)',
+            color: 'var(--accent)', background: 'rgba(37,99,235,0.08)',
             border: '1px solid rgba(37,99,235,0.3)', textDecoration: 'none', whiteSpace: 'nowrap',
             transition: 'all 140ms ease',
           }}

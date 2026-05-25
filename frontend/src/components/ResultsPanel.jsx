@@ -74,7 +74,7 @@ function AirlineFilter({ airlines, selected, onToggle, onClear }) {
         onClick={() => setOpen(o => !o)}
         style={{
           display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 500,
-          color: selectedCount > 0 ? '#60a5fa' : 'var(--text-dim)',
+          color: selectedCount > 0 ? 'var(--accent)' : 'var(--text-dim)',
           background: selectedCount > 0 ? 'rgba(37,99,235,0.1)' : 'var(--surface-pill)',
           border: selectedCount > 0 ? '1px solid rgba(37,99,235,0.4)' : '1px solid var(--border)',
           borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit',
@@ -183,7 +183,7 @@ export default function ResultsPanel({ results, origin, depDate }) {
         <Metric label="Routes Found" value={filtered.length} sub={`${directs} direct · ${allAirlines.length} carriers`} icon={<ChartIcon size={14} stroke="var(--text-dim)" />} />
         <Metric label="Cheapest" value={cheapestRoute ? `₹${formatINR(cheapest)}` : '—'}
           sub={cheapestRoute ? `${cheapestRoute.code} · ${cheapestRoute.airline}` : ''}
-          icon={<TagIcon size={14} stroke="#10B981" />} glow accent="#10B981" />
+          icon={<TagIcon size={14} stroke="var(--success)" />} glow accent="var(--success)" />
         <Metric label="Median Price" value={median ? `₹${formatINR(median)}` : '—'}
           sub="across filtered routes" icon={<TrendIcon size={14} stroke="var(--text-dim)" />} />
         <Metric label="Best Deal To" value={cheapestRoute ? cheapestRoute.city : '—'}
@@ -243,7 +243,7 @@ export default function ResultsPanel({ results, origin, depDate }) {
                 style={{
                   padding: '5px 10px', fontSize: 13, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
                   background: viewMode === mode ? 'rgba(37,99,235,0.2)' : 'var(--surface-pill)',
-                  color: viewMode === mode ? '#60a5fa' : 'var(--text-dim)',
+                  color: viewMode === mode ? 'var(--accent)' : 'var(--text-dim)',
                   borderRight: mode === 'grid' ? '1px solid var(--border)' : 'none',
                 }}>
                 {icon}
@@ -281,7 +281,7 @@ export default function ResultsPanel({ results, origin, depDate }) {
         <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-dim)', fontSize: 13 }}>
           No flights match the current filters.{' '}
           <button onClick={() => { setDirectOnly(false); setMaxPrice(null); setAirlineFilter(new Set()); }}
-            style={{ color: '#60a5fa', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
+            style={{ color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>
             Clear all filters
           </button>
         </div>

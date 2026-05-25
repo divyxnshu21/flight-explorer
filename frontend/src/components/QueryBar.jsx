@@ -62,7 +62,7 @@ export default function QueryBar({ selected, onRemove, onClear, onAdd }) {
         </span>
         <button onClick={() => setAddOpen(true)} style={{
           display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600,
-          color: '#60a5fa', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit',
+          color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit',
         }}>
           <PlusIcon size={12} /> add airport
         </button>
@@ -134,7 +134,7 @@ export default function QueryBar({ selected, onRemove, onClear, onAdd }) {
                   <span style={{ fontSize: 16 }}>{apt.flag || '✈️'}</span>
                   <div>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: i === activeIdx ? '#60a5fa' : 'var(--text)' }}>{apt.code}</span>
+                      <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: i === activeIdx ? 'var(--accent)' : 'var(--text)' }}>{apt.code}</span>
                       <span style={{ fontSize: 12, color: 'var(--text)' }}>{apt.city}</span>
                     </div>
                     <div style={{ fontSize: 10.5, color: 'var(--text-dim)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>{apt.name}</div>
